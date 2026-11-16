@@ -5,10 +5,13 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
+  Compass,
   ExternalLink,
   FileText,
   Loader2,
+  Megaphone,
   RefreshCw,
+  Wrench,
 } from '@lucide/vue'
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
@@ -19,6 +22,7 @@ import { ENV } from '@/config/env'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const { t } = useI18n()
@@ -30,6 +34,10 @@ watchEffect(() => {
   setBreadcrumb([{ label: t('nav.home') }], '')
 })
 
+// 两栏公告：面向用户 (bcs-doc:status) & 面向创作者 (bcs-doc:ann-uploader)
+const userAnnQuery = useWikiDocQuery('zh-CN', 'status')
+const uploaderAnnQuery = useWikiDocQuery('zh-CN', 'ann-uploader')
+
 // 最近更新包列表（前 6 条可下载包）
 const recentQuery = usePackagesQuery({
   platform: '+',
@@ -37,42 +45,141 @@ const recentQuery = usePackagesQuery({
   pageSize: 6,
 })
 
-// 主页公告（DokuWiki ?do=export_xhtmlbody）
-const startWikiQuery = useWikiDocQuery(
-  () => preferences.locale,
-  'start',
-)
-
-// 运维状态公告（原 status.js 请求 bcs-doc:status）
-const statusWikiQuery = useWikiDocQuery('zh-CN', 'status')
-
-// 站点统计数据（原 status.js 请求 statapi.php）
+// 站点统计数据
 const statsQuery = useSiteStatsQuery()
 
 const numberFormatter = computed(
   () => new Intl.NumberFormat(preferences.locale),
 )
 
-const packFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'packfields'),
-)
+const userAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'status'))
+const uploaderAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'ann-uploader'))
+const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale, 'start'))
+const packFieldsDocUrl = computed(() => buildWikiDocUrl(preferences.locale, 'packfields'))
+const fileFieldsDocUrl = computed(() => buildWikiDocUrl(preferences.locale, 'filefields'))
 
-const fileFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'filefields'),
-)
-
-const statusDocUrl = computed(() =>
-  buildWikiDocUrl('zh-CN', 'status'),
-)
+const announcementCards = computed(() => [
+  {
+    key: 'user',
+    title: t('home.userAnnouncements'),
+    icon: Megaphone,
+    url: userAnnUrl.value,
+    query: userAnnQuery,
+  },
+  {
+    key: 'uploader',
+    title: t('home.uploaderAnnouncements'),
+    icon: Wrench,
+    url: uploaderAnnUrl.value,
+    query: uploaderAnnQuery,
+  },
+])
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
     <SidebarLayout side="right">
       <!-- 左主栏 -->
-      <div class="divide-y divide-border">
-        <!-- 1. 最近更新线路包 -->
-        <section class="pb-8">
+      <div class="flex flex-col gap-6">
+        <!-- 1. 顶部左右两栏固定高度滚动公告卡片 -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <article
+            v-for="card in announcementCards"
+            :key="card.key"
+            class="border border-border bg-card flex flex-col min-w-0"
+          >
+            <header class="px-3.5 py-2.5 border-b border-border bg-muted/35 flex items-center justify-between gap-2 shrink-0">
+              <div class="flex items-center gap-2 min-w-0">
+                <component :is="card.icon" class="size-3.5 text-primary shrink-0" />
+                <h2 class="text-xs font-semibold tracking-wide text-foreground truncate">
+                  {{ card.title }}
+                </h2>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span
+                  v-if="card.query.isFetching.value"
+                  class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
+                >
+                  <Loader2 class="size-3 animate-spin text-primary" />
+                  <span>{{ t('home.fetchingWiki') }}</span>
+                </span>
+                <a
+                  :href="card.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  :title="t('home.openOnWiki')"
+                >
+                  <ExternalLink class="size-3" />
+                </a>
+              </div>
+            </header>
+
+            <div class="h-52 overflow-y-auto overscroll-contain p-3.5 text-xs">
+              <div v-if="card.query.isPending.value" class="space-y-2.5">
+                <Skeleton class="h-4 w-1/3 rounded-none" />
+                <Skeleton class="h-3.5 w-full rounded-none" />
+                <Skeleton class="h-3.5 w-11/12 rounded-none" />
+                <Skeleton class="h-3.5 w-4/5 rounded-none" />
+                <Skeleton class="h-3.5 w-2/3 rounded-none" />
+              </div>
+
+              <div
+                v-else-if="card.query.isError.value"
+                class="h-full flex flex-col items-start justify-center gap-2.5 text-muted-foreground"
+              >
+                <p class="leading-relaxed">{{ t('home.wikiErrorDesc') }}</p>
+                <div class="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="rounded-none cursor-pointer"
+                    @click="() => card.query.refetch()"
+                  >
+                    <RefreshCw class="size-3" />
+                    <span>{{ t('common.retry') }}</span>
+                  </Button>
+                  <a
+                    :href="card.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[11px] text-primary hover:underline underline-offset-4"
+                  >
+                    {{ t('home.openOnWiki') }}
+                  </a>
+                </div>
+              </div>
+
+              <div
+                v-else-if="card.query.data.value?.isEmpty"
+                class="h-full flex flex-col items-start justify-center gap-2 text-muted-foreground"
+              >
+                <p class="leading-relaxed">{{ t('home.wikiEmptyDesc') }}</p>
+                <a
+                  :href="card.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-[11px] text-primary hover:underline underline-offset-4"
+                >
+                  <span>{{ t('home.openOnWiki') }}</span>
+                  <ExternalLink class="size-3" />
+                </a>
+              </div>
+
+              <div
+                v-else-if="card.query.data.value?.html"
+                class="prose prose-xs max-w-none wiki-prose text-xs leading-relaxed"
+                v-html="card.query.data.value.html"
+              />
+            </div>
+          </article>
+        </section>
+
+        <Separator />
+
+        <!-- 2. 最近更新线路包 -->
+        <section>
           <div class="flex items-center justify-between gap-4 mb-3">
             <h1 class="text-base font-semibold tracking-tight text-foreground">
               {{ t('home.recentPackages') }}
@@ -123,142 +230,11 @@ const statusDocUrl = computed(() =>
             />
           </div>
         </section>
-
-        <!-- 2. 公告与使用指南 (Wiki XHR) -->
-        <section class="pt-7">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <div class="flex items-center gap-2.5">
-              <h2 class="text-base font-semibold tracking-tight text-foreground">
-                {{ t('home.announcementsAndGuide') }}
-              </h2>
-              <span
-                v-if="startWikiQuery.isFetching.value"
-                class="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-              >
-                <Loader2 class="size-3 animate-spin" />
-                <span>{{ t('home.fetchingWiki') }}</span>
-              </span>
-            </div>
-
-            <a
-              :href="buildWikiDocUrl(preferences.locale, 'start')"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <span>{{ t('home.openOnWiki') }}</span>
-              <ExternalLink class="size-3" />
-            </a>
-          </div>
-
-          <!-- 骨架屏 -->
-          <div v-if="startWikiQuery.isPending.value" class="space-y-4">
-            <Skeleton class="h-6 w-56 rounded-none" />
-            <Skeleton class="h-4 w-full rounded-none" />
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div class="border border-border p-4 space-y-2">
-                <Skeleton class="h-4 w-32 rounded-none" />
-                <Skeleton class="h-3.5 w-full rounded-none" />
-                <Skeleton class="h-3.5 w-4/5 rounded-none" />
-              </div>
-              <div class="border border-border p-4 space-y-2">
-                <Skeleton class="h-4 w-32 rounded-none" />
-                <Skeleton class="h-3.5 w-full rounded-none" />
-                <Skeleton class="h-3.5 w-3/4 rounded-none" />
-              </div>
-            </div>
-            <div class="space-y-2 pt-2">
-              <Skeleton class="h-4 w-40 rounded-none" />
-              <Skeleton class="h-3.5 w-full rounded-none" />
-              <Skeleton class="h-3.5 w-11/12 rounded-none" />
-              <Skeleton class="h-3.5 w-5/6 rounded-none" />
-            </div>
-          </div>
-
-          <!-- 错误状态 -->
-          <div
-            v-else-if="startWikiQuery.isError.value"
-            class="border border-border bg-muted/30 p-5 space-y-3"
-          >
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-foreground">
-                {{ t('home.wikiErrorTitle') }}
-              </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t('home.wikiErrorDesc') }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                class="rounded-none cursor-pointer"
-                @click="() => startWikiQuery.refetch()"
-              >
-                <RefreshCw class="size-3.5" />
-                <span>{{ t('common.retry') }}</span>
-              </Button>
-              <Button as-child variant="ghost" size="sm" class="rounded-none">
-                <a
-                  :href="buildWikiDocUrl(preferences.locale, 'start')"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>{{ t('home.openOnWiki') }}</span>
-                  <ExternalLink class="size-3.5" />
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <!-- 服务端返回空正文状态 -->
-          <div
-            v-else-if="startWikiQuery.data.value?.isEmpty"
-            class="border border-border bg-muted/30 p-5 space-y-3"
-          >
-            <div class="space-y-1">
-              <p class="text-sm font-medium text-foreground">
-                {{ t('home.wikiEmptyTitle') }}
-              </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t('home.wikiEmptyDesc') }}
-              </p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                class="rounded-none cursor-pointer"
-                @click="() => startWikiQuery.refetch()"
-              >
-                <RefreshCw class="size-3.5" />
-                <span>{{ t('common.retry') }}</span>
-              </Button>
-              <Button as-child variant="default" size="sm" class="rounded-none">
-                <a
-                  :href="startWikiQuery.data.value.sourceUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>{{ t('home.openOnWiki') }}</span>
-                  <ExternalLink class="size-3.5" />
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <!-- 正常渲染 Wiki 正文 -->
-          <div
-            v-else-if="startWikiQuery.data.value?.html"
-            class="prose prose-sm max-w-none wiki-prose"
-            v-html="startWikiQuery.data.value.html"
-          />
-        </section>
       </div>
 
       <!-- 右侧辅助栏 -->
       <template #sidebar>
-        <div class="space-y-6 divide-y divide-border">
+        <div class="flex flex-col gap-5">
           <!-- 常用入口 -->
           <section class="space-y-3">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -272,13 +248,27 @@ const statusDocUrl = computed(() =>
               </router-link>
             </Button>
 
-            <ul class="space-y-1 pt-1 text-sm">
+            <ul class="space-y-0.5 pt-1 text-sm">
+              <li>
+                <a
+                  :href="usageGuideUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
+                >
+                  <span class="flex items-center gap-2 min-w-0">
+                    <Compass class="size-3.5 text-muted-foreground shrink-0" />
+                    <span class="truncate">{{ t('home.usageGuide') }}</span>
+                  </span>
+                  <ExternalLink class="size-3 text-muted-foreground shrink-0" />
+                </a>
+              </li>
               <li>
                 <a
                   :href="ENV.analyticsUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="-mx-2 px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
+                  class="px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
                 >
                   <span class="flex items-center gap-2 min-w-0">
                     <BarChart3 class="size-3.5 text-muted-foreground shrink-0" />
@@ -287,39 +277,13 @@ const statusDocUrl = computed(() =>
                   <ExternalLink class="size-3 text-muted-foreground shrink-0" />
                 </a>
               </li>
-              <li>
-                <a
-                  :href="packFieldsDocUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="-mx-2 px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
-                >
-                  <span class="flex items-center gap-2 min-w-0">
-                    <BookOpen class="size-3.5 text-muted-foreground shrink-0" />
-                    <span class="truncate">{{ t('home.packFieldsGuide') }}</span>
-                  </span>
-                  <ExternalLink class="size-3 text-muted-foreground shrink-0" />
-                </a>
-              </li>
-              <li>
-                <a
-                  :href="fileFieldsDocUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="-mx-2 px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
-                >
-                  <span class="flex items-center gap-2 min-w-0">
-                    <FileText class="size-3.5 text-muted-foreground shrink-0" />
-                    <span class="truncate">{{ t('home.fileFieldsGuide') }}</span>
-                  </span>
-                  <ExternalLink class="size-3 text-muted-foreground shrink-0" />
-                </a>
-              </li>
             </ul>
           </section>
 
+          <Separator />
+
           <!-- 站点统计（时刻表式双列紧凑键值） -->
-          <section class="pt-5 space-y-3">
+          <section class="space-y-3">
             <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {{ t('home.siteStats') }}
             </h2>
@@ -366,38 +330,6 @@ const statusDocUrl = computed(() =>
                 </dd>
               </div>
             </dl>
-          </section>
-
-          <!-- 服务状态公告 -->
-          <section class="pt-5 space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {{ t('home.serviceStatus') }}
-              </h2>
-              <a
-                :href="statusDocUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-[11px] text-primary hover:underline underline-offset-4"
-              >
-                {{ t('home.statusLink') }}
-              </a>
-            </div>
-
-            <div v-if="statusWikiQuery.isPending.value" class="space-y-2">
-              <Skeleton class="h-3.5 w-full rounded-none" />
-              <Skeleton class="h-3.5 w-4/5 rounded-none" />
-            </div>
-
-            <div
-              v-else-if="statusWikiQuery.data.value && !statusWikiQuery.data.value.isEmpty"
-              class="prose prose-xs max-w-none wiki-prose text-xs"
-              v-html="statusWikiQuery.data.value.html"
-            />
-
-            <p v-else class="text-xs text-muted-foreground leading-relaxed">
-              {{ t('home.statusEmpty') }}
-            </p>
           </section>
         </div>
       </template>

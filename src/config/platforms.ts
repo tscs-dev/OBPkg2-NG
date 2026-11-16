@@ -5,6 +5,7 @@ export type PlatformId = 'hmmsim' | 'openbve'
 export interface PlatformMeta {
   id: PlatformId
   name: string
+  shortCode: string
   color: string
 }
 
@@ -12,11 +13,13 @@ export const PLATFORMS: Record<PlatformId, PlatformMeta> = {
   hmmsim: {
     id: 'hmmsim',
     name: 'Hmmsim',
+    shortCode: 'HM',
     color: '#569E7B',
   },
   openbve: {
     id: 'openbve',
     name: 'OpenBVE',
+    shortCode: 'OB',
     color: '#636363',
   },
 }
@@ -31,9 +34,11 @@ export function getPlatformMeta(platform: string): PlatformMeta {
   if (isKnownPlatform(platform)) {
     return PLATFORMS[platform]
   }
+  const normalized = platform.trim()
   return {
     id: 'openbve',
-    name: platform,
+    name: normalized || 'Unknown',
+    shortCode: (normalized.slice(0, 2) || '??').toUpperCase(),
     color: '#737373',
   }
 }

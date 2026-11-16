@@ -21,7 +21,7 @@ const gridClass = computed(() =>
 
 const asideClass = computed(() =>
   cn(
-    'lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100svh-3rem)] lg:overflow-y-auto overscroll-contain',
+    'min-w-0 lg:sticky lg:top-[4.5rem] lg:self-start',
     props.side === 'left'
       ? 'lg:border-r lg:border-border lg:pr-6'
       : 'lg:border-l lg:border-border lg:pl-6',

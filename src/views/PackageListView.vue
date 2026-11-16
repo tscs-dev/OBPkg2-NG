@@ -3,6 +3,7 @@ import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -223,6 +224,16 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
               </SheetContent>
             </Sheet>
           </div>
+        </div>
+
+        <!-- 选择「全部条目」时的说明警告 -->
+        <div
+          v-if="platform === 'all'"
+          role="status"
+          class="mt-3 mb-1 border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 leading-relaxed"
+        >
+          <AlertTriangle class="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <span>{{ t('packages.allEntriesNotice') }}</span>
         </div>
 
         <!-- 首次加载骨架屏 -->

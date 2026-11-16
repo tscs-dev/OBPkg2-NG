@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import type { PackageSummary } from '@/types/models'
-import { formatDateShort, formatUtcTimestamp } from '@/utils/date'
+import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import PackageThumbnail from './PackageThumbnail.vue'
 import PlatformBadge from './PlatformBadge.vue'
 import {
@@ -29,13 +29,22 @@ const secondaryName = computed(() =>
   preferences.formatSecondaryS3(props.pkg.Name, props.pkg.Identifier),
 )
 
-const authorName = computed(() => {
-  if (!props.pkg.Author) return ''
-  return preferences.formatS3(props.pkg.Author.Name)
+const attributionText = computed(() => {
+  if (props.pkg.Author) {
+    const authorName = preferences.formatS3(props.pkg.Author.Name)
+    return authorName ? `${t('common.repost')}: ${authorName}` : t('common.repost')
+  }
+  if (props.pkg.Uploader) {
+    const uploaderName = preferences.formatS3(props.pkg.Uploader.Name)
+    if (uploaderName) {
+      return `${t('common.authorLabel')}: ${uploaderName}`
+    }
+  }
+  return t('common.original')
 })
 
 const shortDate = computed(() => formatDateShort(props.pkg.UpdatedAt))
-const fullUtcDate = computed(() => formatUtcTimestamp(props.pkg.UpdatedAt))
+const fullLocalDate = computed(() => formatLocalTimestamp(props.pkg.UpdatedAt))
 </script>
 
 <template>
@@ -56,21 +65,16 @@ const fullUtcDate = computed(() => formatUtcTimestamp(props.pkg.UpdatedAt))
           <h3 class="text-[15px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors truncate">
             {{ primaryName }}
           </h3>
-          <PlatformBadge :platforms="pkg.Platforms" compact class="shrink-0 hidden sm:inline-flex" />
+          <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="shrink-0 hidden sm:inline-flex" />
         </div>
 
-        <p
-          v-if="secondaryName || authorName"
-          class="text-xs text-muted-foreground truncate flex items-center gap-1.5"
-        >
+        <p class="text-xs text-muted-foreground truncate flex items-center gap-1.5">
           <span v-if="secondaryName" class="truncate">{{ secondaryName }}</span>
-          <span v-if="secondaryName && authorName" aria-hidden="true">·</span>
-          <span v-if="authorName" class="shrink-0">
-            {{ t('common.repost') }}: {{ authorName }}
-          </span>
+          <span v-if="secondaryName" aria-hidden="true">·</span>
+          <span class="shrink-0">{{ attributionText }}</span>
         </p>
 
-        <PlatformBadge :platforms="pkg.Platforms" compact class="pt-1 sm:hidden" />
+        <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="pt-1 sm:hidden" />
       </div>
 
       <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
@@ -85,7 +89,7 @@ const fullUtcDate = computed(() => formatUtcTimestamp(props.pkg.UpdatedAt))
             </time>
           </TooltipTrigger>
           <TooltipContent side="top">
-            {{ fullUtcDate }}
+            {{ fullLocalDate }}
           </TooltipContent>
         </Tooltip>
       </div>

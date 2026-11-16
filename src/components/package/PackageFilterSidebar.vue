@@ -8,6 +8,7 @@ import { PLATFORMS } from '@/config/platforms'
 import { usePreferencesStore } from '@/stores/preferences'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 
 interface Props {
   platform: PlatformFilter
@@ -70,7 +71,7 @@ const isDirty = computed(
 </script>
 
 <template>
-  <div class="space-y-5">
+  <div class="flex flex-col gap-5">
     <!-- 关键词检索 -->
     <section class="space-y-2">
       <label
@@ -126,13 +127,13 @@ const isDirty = computed(
           <span class="flex items-center gap-2 min-w-0">
             <span
               v-if="opt.color"
-              class="size-2 rounded-full shrink-0"
+              class="size-2.5 shrink-0"
               :style="{ backgroundColor: opt.color }"
               aria-hidden="true"
             />
             <span
               v-else
-              class="size-2 border shrink-0"
+              class="size-2.5 border shrink-0"
               :class="platform === opt.value ? 'border-primary bg-primary' : 'border-muted-foreground/40'"
               aria-hidden="true"
             />
@@ -142,8 +143,10 @@ const isDirty = computed(
       </div>
     </section>
 
+    <Separator />
+
     <!-- 显示设置 -->
-    <section class="pt-4 border-t border-border space-y-2.5">
+    <section class="space-y-2.5">
       <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {{ t('packages.displayOptions') }}
       </div>
@@ -162,7 +165,8 @@ const isDirty = computed(
     </section>
 
     <!-- 重置按钮 -->
-    <div v-if="isDirty" class="pt-2 border-t border-border">
+    <template v-if="isDirty">
+      <Separator />
       <Button
         variant="outline"
         size="sm"
@@ -172,6 +176,6 @@ const isDirty = computed(
         <RotateCcw class="size-3.5" />
         <span>{{ t('packages.resetFilters') }}</span>
       </Button>
-    </div>
+    </template>
   </div>
 </template>

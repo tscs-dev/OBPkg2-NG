@@ -23,8 +23,9 @@ import { usePackageDetailQuery } from '@/queries/packages'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
-import { formatDateShort, formatUtcTimestamp } from '@/utils/date'
+import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -285,7 +286,7 @@ watchEffect(() => {
               </div>
 
               <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-muted-foreground tabular-nums">
-                <PlatformBadge :platforms="pkg.Platforms" />
+                <PlatformBadge :platforms="pkg.Platforms" variant="label" />
                 <span aria-hidden="true">·</span>
                 <span v-if="authorDisplayName || uploaderDisplayName">
                   {{ authorDisplayName || uploaderDisplayName }}
@@ -296,7 +297,7 @@ watchEffect(() => {
                     <time :datetime="pkg.UpdatedAt">{{ formatDateShort(pkg.UpdatedAt) }}</time>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    {{ formatUtcTimestamp(pkg.UpdatedAt) }}
+                    {{ formatLocalTimestamp(pkg.UpdatedAt) }}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -336,7 +337,7 @@ watchEffect(() => {
       </section>
 
       <!-- 下部双栏内容区 -->
-      <div ref="tabsAnchorRef" class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div ref="tabsAnchorRef" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 scroll-mt-14">
         <SidebarLayout side="right">
           <!-- 左主栏：Tab 切换 -->
           <div>
@@ -381,7 +382,7 @@ watchEffect(() => {
                 </div>
               </TabsContent>
 
-              <!-- Tab 2: 下载（版本列表） -->
+              <!-- Tab 2: 下载（统一版本表格） -->
               <TabsContent value="downloads" class="pt-5 mt-0">
                 <PackageVersionList
                   :package-id="pkg.ID"
@@ -406,7 +407,7 @@ watchEffect(() => {
 
           <!-- 右侧元数据侧栏 -->
           <template #sidebar>
-            <div class="space-y-6 divide-y divide-border">
+            <div class="flex flex-col gap-5">
               <!-- 创作者与上传者 -->
               <section class="space-y-3">
                 <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -414,7 +415,7 @@ watchEffect(() => {
                 </h2>
 
                 <!-- 转载场景：先展示原作者，再展示上传者 -->
-                <div v-if="pkg.Author" class="space-y-3">
+                <div v-if="pkg.Author" class="flex flex-col gap-3">
                   <div class="space-y-1">
                     <div class="text-xs text-muted-foreground">
                       {{ t('detail.meta.originalAuthor') }}
@@ -444,23 +445,26 @@ watchEffect(() => {
                     </div>
                   </div>
 
-                  <div v-if="pkg.Uploader" class="space-y-1 pt-2 border-t border-border/60">
-                    <div class="text-xs text-muted-foreground">
-                      {{ t('detail.meta.uploader') }}
+                  <template v-if="pkg.Uploader">
+                    <Separator />
+                    <div class="space-y-1">
+                      <div class="text-xs text-muted-foreground">
+                        {{ t('detail.meta.uploader') }}
+                      </div>
+                      <div class="text-sm font-medium text-foreground break-words">
+                        {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
+                      </div>
+                      <div v-if="pkg.Uploader.Email" class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
+                        <a
+                          :href="`mailto:${pkg.Uploader.Email}`"
+                          class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
+                        >
+                          <Mail class="size-3" />
+                          <span>{{ t('detail.meta.email') }}</span>
+                        </a>
+                      </div>
                     </div>
-                    <div class="text-sm font-medium text-foreground break-words">
-                      {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
-                    </div>
-                    <div v-if="pkg.Uploader.Email" class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
-                      <a
-                        :href="`mailto:${pkg.Uploader.Email}`"
-                        class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
-                      >
-                        <Mail class="size-3" />
-                        <span>{{ t('detail.meta.email') }}</span>
-                      </a>
-                    </div>
-                  </div>
+                  </template>
                 </div>
 
                 <!-- 原创场景：只展示上传者并标记为作者 -->
@@ -494,8 +498,10 @@ watchEffect(() => {
                 </div>
               </section>
 
+              <Separator />
+
               <!-- 技术元数据 -->
-              <section class="pt-5 space-y-3">
+              <section class="space-y-3">
                 <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {{ t('detail.meta.specsHeading') }}
                 </h2>
@@ -563,14 +569,14 @@ watchEffect(() => {
                   <div class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('detail.meta.updatedAt') }}</dt>
                     <dd class="text-foreground tabular-nums">
-                      {{ formatUtcTimestamp(pkg.UpdatedAt) }}
+                      {{ formatLocalTimestamp(pkg.UpdatedAt) }}
                     </dd>
                   </div>
 
                   <div v-if="pkg.CreatedAt" class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('detail.meta.createdAt') }}</dt>
                     <dd class="text-foreground tabular-nums">
-                      {{ formatUtcTimestamp(pkg.CreatedAt) }}
+                      {{ formatLocalTimestamp(pkg.CreatedAt) }}
                     </dd>
                   </div>
 

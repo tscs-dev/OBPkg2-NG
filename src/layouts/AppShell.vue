@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Check, ChevronDown, Globe, Home, Languages, LogIn, Package } from '@lucide/vue'
+import { ChevronDown, Globe, Home, LogIn, Package } from '@lucide/vue'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, type BreadcrumbItemData } from '@/composables/useBreadcrumb'
@@ -73,8 +73,8 @@ function handleLocaleChange(value: unknown) {
 <template>
   <TooltipProvider :delay-duration="250">
     <div class="min-h-svh flex flex-col bg-background text-foreground overflow-x-clip">
-      <!-- Solid 顶部工具条 -->
-      <header class="h-12 bg-toolbar-bg text-white shrink-0 border-b border-black/10">
+      <!-- Solid 顶部工具条 (Sticky) -->
+      <header class="sticky top-0 z-40 h-12 bg-toolbar-bg text-white shrink-0 border-b border-black/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
           <div class="flex items-center gap-2.5 sm:gap-5 min-w-0">
             <router-link
@@ -125,33 +125,6 @@ function handleLocaleChange(value: unknown) {
           </div>
 
           <div class="flex items-center gap-1.5 shrink-0">
-            <!-- English Names 快速开关 -->
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium border transition-colors cursor-pointer"
-                  :class="
-                    preferences.preferEnglishName
-                      ? 'bg-white text-toolbar-bg border-white'
-                      : 'bg-black/10 text-white/90 border-white/20 hover:bg-black/20 hover:text-white'
-                  "
-                  :aria-pressed="preferences.preferEnglishName"
-                  @click="preferences.toggleEnglishName"
-                >
-                  <Languages class="size-3.5 shrink-0" />
-                  <span class="hidden md:inline">{{ t('nav.englishNames') }}</span>
-                  <Check
-                    v-if="preferences.preferEnglishName"
-                    class="size-3 shrink-0"
-                  />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {{ t('packages.preferEnglishDesc') }}
-              </TooltipContent>
-            </Tooltip>
-
             <!-- 界面语言切换 -->
             <DropdownMenu>
               <DropdownMenuTrigger as-child>

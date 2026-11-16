@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AlertCircle, Clock, Download, ExternalLink } from '@lucide/vue'
+import { AlertCircle, CheckCircle2, Clock, Download, ExternalLink } from '@lucide/vue'
 import type { PackageFile } from '@/types/models'
-import { buildFileDownloadUrl, getPlatformMeta, PLATFORM_ORDER } from '@/config/platforms'
+import { buildFileDownloadUrl, PLATFORM_ORDER } from '@/config/platforms'
 import { compareVersionsDesc } from '@/utils/version'
 import { usePreferencesStore } from '@/stores/preferences'
+import PlatformBadge from './PlatformBadge.vue'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface Props {
   packageId: number
@@ -20,156 +26,175 @@ const props = withDefaults(defineProps<Props>(), {
 const { t } = useI18n()
 const preferences = usePreferencesStore()
 
-interface PlatformFileGroup {
-  platform: string
-  meta: ReturnType<typeof getPlatformMeta>
-  items: (PackageFile & { downloadUrl: string | null })[]
-}
-
-const groupedFiles = computed<PlatformFileGroup[]>(() => {
+const sortedFiles = computed(() => {
   const list = props.files ?? []
   if (list.length === 0) return []
 
-  const groups = new Map<string, PackageFile[]>()
-  for (const file of list) {
-    const key = file.Platform || 'other'
-    const existing = groups.get(key)
-    if (existing) {
-      existing.push(file)
-    } else {
-      groups.set(key, [file])
-    }
-  }
-
-  const orderedKeys = Array.from(groups.keys()).sort((a, b) => {
-    const idxA = PLATFORM_ORDER.indexOf(a as (typeof PLATFORM_ORDER)[number])
-    const idxB = PLATFORM_ORDER.indexOf(b as (typeof PLATFORM_ORDER)[number])
-    if (idxA !== -1 && idxB !== -1) return idxA - idxB
-    if (idxA !== -1) return -1
-    if (idxB !== -1) return 1
-    return a.localeCompare(b)
+  const sorted = [...list].sort((a, b) => {
+    const cmp = compareVersionsDesc(a.Version, b.Version)
+    if (cmp !== 0) return cmp
+    const idxA = PLATFORM_ORDER.indexOf(a.Platform as (typeof PLATFORM_ORDER)[number])
+    const idxB = PLATFORM_ORDER.indexOf(b.Platform as (typeof PLATFORM_ORDER)[number])
+    if (idxA !== -1 && idxB !== -1 && idxA !== idxB) return idxA - idxB
+    return b.ID - a.ID
   })
 
-  return orderedKeys.map((platform) => {
-    const sorted = [...(groups.get(platform) ?? [])].sort((a, b) =>
-      compareVersionsDesc(a.Version, b.Version),
-    )
+  const highestVersion = sorted[0]?.Version ?? ''
+
+  return sorted.map((file) => {
+    const platforms =
+      file.Platforms && file.Platforms.length > 0
+        ? file.Platforms
+        : file.Platform
+          ? [file.Platform]
+          : []
+    const primaryPlatform = platforms[0] ?? file.Platform
     return {
-      platform,
-      meta: getPlatformMeta(platform),
-      items: sorted.map((file) => ({
-        ...file,
-        downloadUrl: buildFileDownloadUrl(
-          props.packageId,
-          file.Platform,
-          file.FetchURL,
-          preferences.locale,
-        ),
-      })),
+      ...file,
+      platforms,
+      primaryPlatform,
+      isLatestVersion: file.Version === highestVersion,
+      downloadUrl: buildFileDownloadUrl(
+        props.packageId,
+        primaryPlatform,
+        file.FetchURL,
+        preferences.locale,
+      ),
     }
   })
 })
+
+const hasHmmsim = computed(() =>
+  sortedFiles.value.some((f) => f.platforms.includes('hmmsim')),
+)
 </script>
 
 <template>
-  <div v-if="groupedFiles.length === 0" class="border border-dashed border-border py-12 px-6 text-center">
+  <div v-if="sortedFiles.length === 0" class="border border-dashed border-border py-12 px-6 text-center">
     <p class="text-sm text-muted-foreground">{{ t('detail.downloadsEmpty') }}</p>
   </div>
 
-  <div v-else class="space-y-6">
-    <section
-      v-for="group in groupedFiles"
-      :key="group.platform"
-      class="border border-border"
-    >
-      <header class="px-4 py-2.5 bg-muted/45 border-b border-border flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span
-            class="size-2 rounded-full shrink-0"
-            :style="{ backgroundColor: group.meta.color }"
-            aria-hidden="true"
-          />
-          <h3 class="text-sm font-semibold text-foreground">{{ group.meta.name }}</h3>
-        </div>
-        <span class="text-xs text-muted-foreground tabular-nums">
-          {{ group.items.length }}
-        </span>
-      </header>
+  <div v-else class="space-y-4">
+    <div class="border border-border overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-muted/45 border-b border-border text-xs font-semibold text-muted-foreground">
+            <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
+              {{ t('detail.tableHeaders.version') }}
+            </th>
+            <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
+              {{ t('detail.tableHeaders.platform') }}
+            </th>
+            <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
+              {{ t('detail.tableHeaders.size') }}
+            </th>
+            <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
+              {{ t('detail.tableHeaders.status') }}
+            </th>
+            <th scope="col" class="py-2.5 px-3.5 text-right whitespace-nowrap w-20">
+              {{ t('detail.tableHeaders.download') }}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <tr
+            v-for="file in sortedFiles"
+            :key="file.ID"
+            class="hover:bg-muted/35 transition-colors"
+          >
+            <td class="py-2.5 px-3.5 whitespace-nowrap">
+              <div class="inline-flex items-center gap-2">
+                <span class="font-mono font-semibold text-foreground tabular-nums">
+                  v{{ file.Version }}
+                </span>
+                <span
+                  v-if="file.isLatestVersion"
+                  class="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20"
+                >
+                  {{ t('detail.downloadsLatest') }}
+                </span>
+              </div>
+            </td>
 
-      <ul class="divide-y divide-border">
-        <li
-          v-for="(file, idx) in group.items"
-          :key="file.ID"
-          class="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-muted/30 transition-colors"
-        >
-          <div class="min-w-0 space-y-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="font-mono text-sm font-semibold text-foreground tabular-nums">
-                v{{ file.Version }}
+            <td class="py-2.5 px-3.5 whitespace-nowrap">
+              <PlatformBadge :platforms="file.platforms" variant="label" />
+            </td>
+
+            <td class="py-2.5 px-3.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+              {{ file.Size }}
+            </td>
+
+            <td class="py-2.5 px-3.5 text-xs whitespace-nowrap">
+              <span
+                v-if="file.NeedValidation && !file.Validated && file.RejectReason"
+                class="inline-flex items-center gap-1.5 text-destructive"
+              >
+                <AlertCircle class="size-3.5 shrink-0" />
+                <span>{{ `${t('common.rejected')}: ${file.RejectReason}` }}</span>
               </span>
               <span
-                v-if="idx === 0"
-                class="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20"
+                v-else-if="file.NeedValidation && !file.Validated"
+                class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400"
               >
-                {{ t('detail.downloadsLatest') }}
+                <Clock class="size-3.5 shrink-0" />
+                <span>{{ t('common.validationPending') }}</span>
               </span>
-              <span class="text-xs text-muted-foreground tabular-nums">
-                {{ file.Size }}
-              </span>
-            </div>
-
-            <div
-              v-if="file.NeedValidation && !file.Validated"
-              class="flex items-center gap-1.5 text-xs"
-              :class="file.RejectReason ? 'text-destructive' : 'text-amber-700 dark:text-amber-400'"
-            >
-              <AlertCircle v-if="file.RejectReason" class="size-3.5 shrink-0" />
-              <Clock v-else class="size-3.5 shrink-0" />
-              <span>
-                {{
-                  file.RejectReason
-                    ? `${t('common.rejected')}: ${file.RejectReason}`
-                    : t('common.validationPending')
-                }}
-              </span>
-            </div>
-          </div>
-
-          <div class="shrink-0">
-            <Button
-              v-if="file.downloadUrl"
-              as-child
-              size="sm"
-              class="rounded-none w-full sm:w-auto"
-            >
-              <a
-                :href="file.downloadUrl"
-                target="_blank"
-                rel="noopener noreferrer"
+              <span
+                v-else
+                class="inline-flex items-center gap-1.5 text-muted-foreground"
               >
-                <ExternalLink v-if="file.Platform === 'hmmsim'" class="size-3.5" />
-                <Download v-else class="size-3.5" />
-                <span>
+                <CheckCircle2 class="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{{ t('common.validated') }}</span>
+              </span>
+            </td>
+
+            <td class="py-2 px-3.5 text-right whitespace-nowrap">
+              <Tooltip v-if="file.downloadUrl">
+                <TooltipTrigger as-child>
+                  <Button
+                    as-child
+                    variant="ghost"
+                    size="icon-sm"
+                    class="rounded-none text-primary hover:text-primary hover:bg-primary/10"
+                  >
+                    <a
+                      :href="file.downloadUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :aria-label="
+                        file.primaryPlatform === 'hmmsim'
+                          ? t('detail.hmmsimInstallAction')
+                          : t('detail.downloadAction')
+                      "
+                    >
+                      <ExternalLink v-if="file.primaryPlatform === 'hmmsim'" class="size-4" />
+                      <Download v-else class="size-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
                   {{
-                    file.Platform === 'hmmsim'
+                    file.primaryPlatform === 'hmmsim'
                       ? t('detail.hmmsimInstallAction')
                       : t('detail.downloadAction')
                   }}
-                </span>
-              </a>
-            </Button>
-            <Button
-              v-else
-              size="sm"
-              variant="outline"
-              disabled
-              class="rounded-none w-full sm:w-auto"
-            >
-              {{ t('common.unavailable') }}
-            </Button>
-          </div>
-        </li>
-      </ul>
-    </section>
+                </TooltipContent>
+              </Tooltip>
+
+              <Button
+                v-else
+                variant="ghost"
+                size="icon-sm"
+                disabled
+                class="rounded-none"
+                :aria-label="t('common.unavailable')"
+              >
+                <Download class="size-4" />
+              </Button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>

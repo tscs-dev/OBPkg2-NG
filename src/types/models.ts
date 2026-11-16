@@ -26,6 +26,7 @@ export interface PackageFile {
   ID: number
   PackageID: number
   Platform: string
+  Platforms?: string[] | null
   Version: string
   Size: string
   Service?: string
@@ -45,6 +46,7 @@ export interface PackageSummary {
   GUID?: string
   Name: String3
   UploaderID: number
+  Uploader?: Uploader | null
   Author?: Author | null
   Homepage?: string
   ForcePopup: boolean
