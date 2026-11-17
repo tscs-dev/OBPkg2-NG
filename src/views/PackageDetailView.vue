@@ -578,9 +578,6 @@ watchEffect(() => {
                         <span>{{ pkg.Homepage }}</span>
                         <ExternalLink class="size-3 shrink-0" />
                       </a>
-                      <p v-if="pkg.ForcePopup" class="text-[11px] text-muted-foreground">
-                        {{ t('detail.meta.forcePopup') }}
-                      </p>
                     </dd>
                   </div>
 

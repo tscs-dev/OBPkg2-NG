@@ -75,7 +75,6 @@ async function handleSubmit() {
   <form novalidate @submit.prevent="handleSubmit">
     <FormPanel
       :title="t('settings.security.panelTitle')"
-      :description="t('settings.security.panelDesc')"
     >
       <template #header-extra>
         <button

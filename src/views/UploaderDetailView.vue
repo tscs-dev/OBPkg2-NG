@@ -81,6 +81,7 @@ const monogram = computed(() => {
 
 const roleBadge = computed(() => {
   const priv = uploader.value?.Privilege ?? 0
+  if (priv >= 100) return t('uploader.roleSuperAdmin')
   if (priv >= 50) return t('uploader.roleAdmin')
   if (priv >= 10) return t('uploader.roleModerator')
   return ''
@@ -353,7 +354,7 @@ watchEffect(() => {
       <!-- 全宽创作者标题带 -->
       <section class="bg-muted/35 border-b border-border">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div class="flex items-start sm:items-center gap-4 min-w-0">
+          <div class="flex items-center gap-4 min-w-0">
             <div
               class="size-14 shrink-0 flex items-center justify-center bg-primary/12 text-primary border border-primary/25 font-mono text-xl font-bold select-none"
               aria-hidden="true"
@@ -379,10 +380,6 @@ watchEffect(() => {
                 <span v-if="secondaryName" class="text-sm text-muted-foreground">
                   {{ secondaryName }}
                 </span>
-                <span v-if="secondaryName" aria-hidden="true">·</span>
-                <span class="font-mono">#{{ uploader.ID }}</span>
-                <span aria-hidden="true">·</span>
-                <span>{{ t('uploader.meta.packageCount') }}: {{ enrichedPackages.length }}</span>
               </div>
             </div>
           </div>

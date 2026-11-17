@@ -2,7 +2,7 @@
 import { cn } from 'cn'
 
 interface Props {
-  title: string
+  title?: string
   description?: string
   class?: string
 }
@@ -12,7 +12,7 @@ const props = defineProps<Props>()
 
 <template>
   <section :class="cn('border border-border bg-card', props.class)">
-    <header class="min-h-9 px-4 py-2 bg-muted/40 border-b border-border flex flex-wrap items-center justify-between gap-2">
+    <header v-if="title" class="min-h-9 px-4 py-2 bg-muted/40 border-b border-border flex flex-wrap items-center justify-between gap-2">
       <div class="min-w-0">
         <h2 class="text-xs font-semibold tracking-wide text-foreground">
           {{ title }}

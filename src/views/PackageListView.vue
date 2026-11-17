@@ -298,7 +298,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
         <!-- Ghost 包列表 -->
         <div
           v-else
-          class="divide-y divide-border/70 transition-opacity duration-150"
+          class="divide-y divide-border/50 transition-opacity duration-150"
           :class="{ 'opacity-65': packagesQuery.isPlaceholderData.value }"
         >
           <PackageGhostRow

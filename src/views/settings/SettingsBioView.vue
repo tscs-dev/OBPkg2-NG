@@ -41,9 +41,6 @@ const showPreview = ref(false)
           <h3 class="text-sm font-semibold text-foreground">
             {{ t('settings.bio.placeholderTitle') }}
           </h3>
-          <p class="text-xs text-muted-foreground leading-relaxed max-w-xl">
-            {{ t('settings.bio.placeholderDesc') }}
-          </p>
         </div>
       </div>
 

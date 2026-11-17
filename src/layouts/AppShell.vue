@@ -198,8 +198,6 @@ function handleLogout() {
                   :aria-label="t('nav.language')"
                 >
                   <Globe class="size-3.5 shrink-0" />
-                  <span class="hidden sm:inline">{{ currentLocaleLabel }}</span>
-                  <ChevronDown class="size-3 opacity-80" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" class="w-40 rounded-none">
@@ -253,12 +251,6 @@ function handleLogout() {
                     <span>{{ t('nav.settings') }}</span>
                   </router-link>
                 </DropdownMenuItem>
-                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
-                  <router-link to="/settings/security">
-                    <Shield class="size-3.5" />
-                    <span>{{ t('nav.security') }}</span>
-                  </router-link>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   class="rounded-none text-xs text-destructive focus:text-destructive cursor-pointer"
@@ -278,14 +270,6 @@ function handleLogout() {
               >
                 <LogIn class="size-3.5 shrink-0" />
                 <span>{{ t('nav.login') }}</span>
-              </router-link>
-
-              <router-link
-                to="/auth/register"
-                class="hidden sm:flex h-8 px-2.5 items-center gap-1.5 text-xs font-medium text-white/90 hover:text-white hover:bg-black/15 border border-white/15 transition-colors"
-              >
-                <UserPlus class="size-3.5 shrink-0" />
-                <span>{{ t('nav.register') }}</span>
               </router-link>
             </template>
           </div>

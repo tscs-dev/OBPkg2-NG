@@ -148,7 +148,6 @@ async function handleSubmit() {
   <form v-else-if="uploaderQuery.data.value" novalidate class="space-y-5" @submit.prevent="handleSubmit">
     <FormPanel
       :title="t('settings.profile.namePanelTitle')"
-      :description="t('settings.profile.namePanelDesc')"
     >
       <template #header-extra>
         <a
@@ -200,7 +199,9 @@ async function handleSubmit() {
           :class="homepageError ? 'border-destructive focus:border-destructive' : ''"
         />
       </FormRow>
+    </FormPanel>
 
+    <FormPanel title="">
       <template #footer>
         <div class="min-h-5 flex items-center text-xs">
           <span

@@ -53,15 +53,6 @@ watchEffect(() => {
             {{ t('about.systemSubtitle') }}
           </p>
         </div>
-
-        <div class="inline-flex items-stretch border border-border bg-background text-xs tabular-nums self-start md:self-auto">
-          <span class="px-3 py-1.5 font-medium text-foreground bg-muted/45 border-r border-border">
-            {{ t('about.softwareName') }}
-          </span>
-          <span class="px-3 py-1.5 font-mono font-semibold text-primary">
-            v{{ appVersion }}
-          </span>
-        </div>
       </div>
     </section>
 
@@ -123,16 +114,14 @@ watchEffect(() => {
           <div class="flex flex-col gap-5">
             <!-- 软件铭牌 -->
             <section class="space-y-3">
-              <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {{ t('about.meta.softwareHeading') }}
+              <h2 class="text-xs font-semibold mb-1">
+                {{ t('about.softwareName') }}
               </h2>
+              <p class="text-muted-foreground text-xs">
+                Omni-purpose platform for professionally Built Packages
+              </p>
 
               <dl class="space-y-2.5 text-xs">
-                <div class="space-y-0.5">
-                  <dt class="text-muted-foreground">{{ t('about.meta.softwareLabel') }}</dt>
-                  <dd class="font-medium text-foreground">{{ t('about.softwareName') }}</dd>
-                </div>
-
                 <div class="space-y-0.5">
                   <dt class="text-muted-foreground">{{ t('about.meta.versionLabel') }}</dt>
                   <dd class="font-mono text-foreground tabular-nums">v{{ appVersion }}</dd>
