@@ -43,7 +43,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     return english || local || ''
   }
 
-  function formatSecondaryS3(s3?: String3 | null, identifier?: string): string {
+  function formatSecondaryS3(s3?: String3 | null): string {
     if (!s3) return ''
     const local = s3.Local?.trim() ?? ''
     const english = s3.English?.trim() ?? ''
@@ -51,7 +51,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     const primary = preferEnglishName.value ? english : local
     const secondary = preferEnglishName.value ? local : english
     if (!secondary || secondary === primary) return ''
-    if (identifier && secondary === identifier.trim()) return ''
     return secondary
   }
 

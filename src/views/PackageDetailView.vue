@@ -80,7 +80,7 @@ const primaryName = computed(() => {
 
 const secondaryName = computed(() => {
   if (!pkg.value) return ''
-  return preferences.formatSecondaryS3(pkg.value.Name, pkg.value.Identifier)
+  return preferences.formatSecondaryS3(pkg.value.Name)
 })
 
 const authorDisplayName = computed(() => {

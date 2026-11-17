@@ -63,10 +63,6 @@ const sortedFiles = computed(() => {
     }
   })
 })
-
-const hasHmmsim = computed(() =>
-  sortedFiles.value.some((f) => f.platforms.includes('hmmsim')),
-)
 </script>
 
 <template>

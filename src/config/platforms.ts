@@ -12,8 +12,8 @@ export interface PlatformMeta {
 export const PLATFORMS: Record<PlatformId, PlatformMeta> = {
   hmmsim: {
     id: 'hmmsim',
-    name: 'Hmmsim',
-    shortCode: 'HM',
+    name: 'Hmmsim 2',
+    shortCode: 'H2',
     color: '#569E7B',
   },
   openbve: {

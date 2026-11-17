@@ -26,13 +26,13 @@ const primaryName = computed(
 )
 
 const secondaryName = computed(() =>
-  preferences.formatSecondaryS3(props.pkg.Name, props.pkg.Identifier),
+  preferences.formatSecondaryS3(props.pkg.Name),
 )
 
 const attributionText = computed(() => {
   if (props.pkg.Author) {
     const authorName = preferences.formatS3(props.pkg.Author.Name)
-    return authorName ? `${t('common.repost')}: ${authorName}` : t('common.repost')
+    return authorName ? `${t('common.repostLabel')}: ${authorName}` : t('common.repostLabel')
   }
   if (props.pkg.Uploader) {
     const uploaderName = preferences.formatS3(props.pkg.Uploader.Name)
@@ -61,27 +61,22 @@ const fullLocalDate = computed(() => formatLocalTimestamp(props.pkg.UpdatedAt))
 
     <div class="min-w-0 flex-1 flex flex-col justify-between min-h-[68px] sm:min-h-[90px] gap-1">
       <div class="space-y-0.5 min-w-0">
+        <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="pt-1 float-end" />
         <div class="flex items-start justify-between gap-2">
           <h3 class="text-[15px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors truncate">
             {{ primaryName }}
           </h3>
-          <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="shrink-0 hidden sm:inline-flex" />
         </div>
 
+        <p v-if="secondaryName" class="text-xs text-muted-foreground truncate flex items-center gap-1.5">
+          <span class="truncate">{{ secondaryName }}</span>
+        </p>
         <p class="text-xs text-muted-foreground truncate flex items-center gap-1.5">
-          <span v-if="secondaryName" class="truncate">{{ secondaryName }}</span>
-          <span v-if="secondaryName" aria-hidden="true">·</span>
           <span class="shrink-0">{{ attributionText }}</span>
         </p>
-
-        <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="pt-1 sm:hidden" />
       </div>
 
-      <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
-        <span class="font-mono text-[11px] truncate max-w-[240px] sm:max-w-[340px]">
-          {{ pkg.Identifier }}
-        </span>
-        <span aria-hidden="true">·</span>
+      <div class="flex flex-wrap items-center justify-end gap-x-2 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
         <Tooltip>
           <TooltipTrigger as-child>
             <time :datetime="pkg.UpdatedAt" class="whitespace-nowrap">

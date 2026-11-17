@@ -4,10 +4,8 @@ import { useI18n } from 'vue-i18n'
 import {
   ArrowRight,
   BarChart3,
-  BookOpen,
   Compass,
   ExternalLink,
-  FileText,
   Loader2,
   Megaphone,
   RefreshCw,
@@ -55,8 +53,6 @@ const numberFormatter = computed(
 const userAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'status'))
 const uploaderAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'ann-uploader'))
 const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale, 'start'))
-const packFieldsDocUrl = computed(() => buildWikiDocUrl(preferences.locale, 'packfields'))
-const fileFieldsDocUrl = computed(() => buildWikiDocUrl(preferences.locale, 'filefields'))
 
 const announcementCards = computed(() => [
   {

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, Globe, Home, LogIn, Package } from '@lucide/vue'
+import { ChevronDown, Globe, Home, Info, LogIn, Package } from '@lucide/vue'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, type BreadcrumbItemData } from '@/composables/useBreadcrumb'
@@ -22,12 +22,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -55,11 +50,15 @@ const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
       { label: `#${String(route.params.id ?? '')}` },
     ]
   }
+  if (route.name === 'about') {
+    return [{ label: t('nav.home'), to: '/' }, { label: t('nav.about') }]
+  }
   return [{ label: t('nav.home'), to: '/' }]
 })
 
-function isNavActive(target: 'home' | 'packages'): boolean {
+function isNavActive(target: 'home' | 'packages' | 'about'): boolean {
   if (target === 'home') return route.name === 'home'
+  if (target === 'about') return route.name === 'about'
   return route.name === 'packages' || route.name === 'package-detail'
 }
 
@@ -121,6 +120,23 @@ function handleLocaleChange(value: unknown) {
                   class="absolute inset-x-0 bottom-0 h-0.5 bg-white"
                 />
               </router-link>
+
+              <router-link
+                to="/about"
+                class="relative h-full px-2 sm:px-3 flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+                :class="
+                  isNavActive('about')
+                    ? 'bg-black/15 text-white'
+                    : 'text-white/80 hover:text-white hover:bg-black/10'
+                "
+              >
+                <Info class="size-3.5 shrink-0" />
+                <span>{{ t('nav.about') }}</span>
+                <span
+                  v-if="isNavActive('about')"
+                  class="absolute inset-x-0 bottom-0 h-0.5 bg-white"
+                />
+              </router-link>
             </nav>
           </div>
 
@@ -155,22 +171,15 @@ function handleLocaleChange(value: unknown) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <!-- 预留登录占位入口 -->
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  disabled
-                  class="hidden sm:flex h-8 px-2.5 items-center gap-1.5 text-xs font-medium text-white/55 border border-white/10 cursor-not-allowed"
-                >
-                  <LogIn class="size-3.5 shrink-0" />
-                  <span class="hidden lg:inline">{{ t('nav.accountPlaceholder') }}</span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {{ t('nav.accountPlaceholder') }}
-              </TooltipContent>
-            </Tooltip>
+            <!-- 登录入口（暂不可用） -->
+            <button
+              type="button"
+              disabled
+              class="hidden sm:flex h-8 px-2.5 items-center gap-1.5 text-xs font-medium text-white/60 border border-white/15 cursor-not-allowed"
+            >
+              <LogIn class="size-3.5 shrink-0" />
+              <span>{{ t('nav.login') }}</span>
+            </button>
           </div>
         </div>
       </header>
