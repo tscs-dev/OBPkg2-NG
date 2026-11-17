@@ -6,8 +6,8 @@ export interface String3 {
 
 export interface Author {
   Name: String3
-  Email: string
-  Homepage: string
+  Email?: string
+  Homepage?: string
 }
 
 export interface Uploader {
@@ -20,6 +20,10 @@ export interface Uploader {
   Description?: string
   Privilege: number
   Validated?: boolean
+}
+
+export interface UploaderDetail extends Uploader {
+  Packages: PackageSummary[] | null
 }
 
 export interface PackageFile {
@@ -82,4 +86,41 @@ export interface BackendErrorPayload {
   ErrorCode?: number
   Msg?: string
   Data?: string | number
+}
+
+export interface LoginPayload {
+  username: string
+  password: string
+}
+
+export interface TokenResponse {
+  token: string
+}
+
+export interface RegisterPayload {
+  Email: string
+}
+
+export interface RegisterResponse {
+  Expiry: string
+}
+
+export interface CheckTokenResponse {
+  Email: string
+}
+
+export interface ActivatePayload {
+  Token: string
+  Password: string
+  Name: String3
+}
+
+export interface ChangePasswordPayload {
+  PreviousPassword: string
+  NewPassword: string
+}
+
+export interface UpdateUploaderPayload {
+  Name: String3
+  Homepage: string
 }

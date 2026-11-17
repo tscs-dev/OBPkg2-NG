@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import type { PackageSummary } from '@/types/models'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
+import { hasValidAuthor } from '@/utils/package'
 import PackageThumbnail from './PackageThumbnail.vue'
 import PlatformBadge from './PlatformBadge.vue'
 import {
@@ -30,7 +31,7 @@ const secondaryName = computed(() =>
 )
 
 const attributionText = computed(() => {
-  if (props.pkg.Author) {
+  if (hasValidAuthor(props.pkg.Author)) {
     const authorName = preferences.formatS3(props.pkg.Author.Name)
     return authorName ? `${t('common.repostLabel')}: ${authorName}` : t('common.repostLabel')
   }

@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, Globe, Home, Info, LogIn, Package } from '@lucide/vue'
+import {
+  AlertCircle,
+  ChevronDown,
+  Globe,
+  Home,
+  Info,
+  LogIn,
+  LogOut,
+  Package,
+  Settings,
+  Shield,
+  User,
+  UserPlus,
+  X,
+} from '@lucide/vue'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { usePreferencesStore } from '@/stores/preferences'
+import { useAuthStore } from '@/stores/auth'
 import { useBreadcrumbState, type BreadcrumbItemData } from '@/composables/useBreadcrumb'
 import type { SupportedLocale } from '@/api/portal'
 import {
@@ -18,20 +33,40 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const preferences = usePreferencesStore()
+const authStore = useAuthStore()
 const { customItems, rightSummary } = useBreadcrumbState()
 
 const currentLocaleLabel = computed(
   () => SUPPORTED_LOCALES.find((item) => item.code === preferences.locale)?.label ?? preferences.locale,
 )
+
+const displayUsername = computed(() => {
+  if (!authStore.profile) return ''
+  return preferences.formatS3(authStore.profile.Name) || `#${authStore.profile.ID}`
+})
+
+const loginLocation = computed(() => {
+  if (route.path.startsWith('/auth/')) {
+    return { name: 'login' as const }
+  }
+  return {
+    name: 'login' as const,
+    query: route.fullPath && route.fullPath !== '/' ? { redirect: route.fullPath } : undefined,
+  }
+})
 
 const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
   if (customItems.value && customItems.value.length > 0) {
@@ -50,6 +85,12 @@ const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
       { label: `#${String(route.params.id ?? '')}` },
     ]
   }
+  if (route.name === 'uploader-detail') {
+    return [
+      { label: t('nav.home'), to: '/' },
+      { label: `${t('uploader.breadcrumb')} #${String(route.params.id ?? '')}` },
+    ]
+  }
   if (route.name === 'about') {
     return [{ label: t('nav.home'), to: '/' }, { label: t('nav.about') }]
   }
@@ -65,6 +106,13 @@ function isNavActive(target: 'home' | 'packages' | 'about'): boolean {
 function handleLocaleChange(value: unknown) {
   if (value === 'zh-CN' || value === 'en' || value === 'ja') {
     preferences.setLocale(value as SupportedLocale)
+  }
+}
+
+function handleLogout() {
+  authStore.logout()
+  if (route.meta.requiresAuth) {
+    void router.push({ name: 'home' })
   }
 }
 </script>
@@ -171,15 +219,75 @@ function handleLocaleChange(value: unknown) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <!-- 登录入口（暂不可用） -->
-            <button
-              type="button"
-              disabled
-              class="hidden sm:flex h-8 px-2.5 items-center gap-1.5 text-xs font-medium text-white/60 border border-white/15 cursor-not-allowed"
-            >
-              <LogIn class="size-3.5 shrink-0" />
-              <span>{{ t('nav.login') }}</span>
-            </button>
+            <!-- 已登录用户菜单 -->
+            <DropdownMenu v-if="authStore.isLoggedIn && authStore.profile">
+              <DropdownMenuTrigger as-child>
+                <button
+                  type="button"
+                  class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors cursor-pointer max-w-[170px]"
+                >
+                  <User class="size-3.5 shrink-0" />
+                  <span class="truncate">{{ displayUsername }}</span>
+                  <ChevronDown class="size-3 opacity-80 shrink-0" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" class="w-56 rounded-none">
+                <DropdownMenuLabel class="font-normal py-2">
+                  <div class="text-xs font-semibold text-foreground truncate">
+                    {{ displayUsername }}
+                  </div>
+                  <div class="text-[11px] text-muted-foreground truncate mt-0.5">
+                    {{ authStore.profile.Email }}
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                  <router-link :to="`/uploaders/${authStore.profile.ID}`">
+                    <User class="size-3.5" />
+                    <span>{{ t('nav.myUploaderPage') }}</span>
+                  </router-link>
+                </DropdownMenuItem>
+                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                  <router-link to="/settings/profile">
+                    <Settings class="size-3.5" />
+                    <span>{{ t('nav.settings') }}</span>
+                  </router-link>
+                </DropdownMenuItem>
+                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                  <router-link to="/settings/security">
+                    <Shield class="size-3.5" />
+                    <span>{{ t('nav.security') }}</span>
+                  </router-link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  class="rounded-none text-xs text-destructive focus:text-destructive cursor-pointer"
+                  @click="handleLogout"
+                >
+                  <LogOut class="size-3.5" />
+                  <span>{{ t('nav.logout') }}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <!-- 未登录：登录与注册入口 -->
+            <template v-else>
+              <router-link
+                :to="loginLocation"
+                class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors"
+              >
+                <LogIn class="size-3.5 shrink-0" />
+                <span>{{ t('nav.login') }}</span>
+              </router-link>
+
+              <router-link
+                to="/auth/register"
+                class="hidden sm:flex h-8 px-2.5 items-center gap-1.5 text-xs font-medium text-white/90 hover:text-white hover:bg-black/15 border border-white/15 transition-colors"
+              >
+                <UserPlus class="size-3.5 shrink-0" />
+                <span>{{ t('nav.register') }}</span>
+              </router-link>
+            </template>
           </div>
         </div>
       </header>
@@ -210,6 +318,37 @@ function handleLocaleChange(value: unknown) {
             class="text-xs text-muted-foreground tabular-nums shrink-0 hidden sm:block"
           >
             {{ rightSummary }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 会话过期非模态提示条 -->
+      <div
+        v-if="authStore.sessionExpiredNotice"
+        role="status"
+        class="bg-amber-500/10 border-b border-amber-500/30 text-amber-950 dark:text-amber-200"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 min-w-0">
+            <AlertCircle class="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span class="leading-snug">{{ t('nav.sessionExpiredBanner') }}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <router-link
+              :to="loginLocation"
+              class="font-semibold text-primary hover:underline underline-offset-4 whitespace-nowrap"
+              @click="authStore.dismissExpiredNotice"
+            >
+              {{ t('nav.reloginNow') }}
+            </router-link>
+            <button
+              type="button"
+              class="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+              :aria-label="t('common.close')"
+              @click="authStore.dismissExpiredNotice"
+            >
+              <X class="size-3.5" />
+            </button>
           </div>
         </div>
       </div>

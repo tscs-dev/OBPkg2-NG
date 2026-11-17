@@ -26,9 +26,26 @@ app.use(i18n)
 app.use(VueQueryPlugin, { queryClient })
 
 const authStore = useAuthStore(pinia)
+authStore.initSessionLifecycle()
+
+authStore.registerSessionExpiryHandler(() => {
+  const current = router.currentRoute.value
+  if (current.meta.requiresAuth) {
+    void router.replace({
+      name: 'login',
+      query: {
+        redirect: current.fullPath,
+        reason: 'expired',
+      },
+    })
+  }
+})
+
 configureApiAuthHooks({
   getToken: () => authStore.token,
-  onUnauthorized: () => authStore.logout(),
+  ensureValidToken: () => authStore.ensureValidToken(),
+  getFreshTokenFromStorage: (failedToken) => authStore.getFreshTokenFromStorage(failedToken),
+  onSessionExpired: () => authStore.expireSession(),
 })
 
 app.mount('#app')

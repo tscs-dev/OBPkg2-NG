@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { computed, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { BookOpen, ExternalLink, Globe, Mail } from '@lucide/vue'
+import { ExternalLink, Globe, Mail } from '@lucide/vue'
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
-import { ENV } from '@/config/env'
-import { buildWikiDocUrl } from '@/api/portal'
-import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { formatLocalTimestamp } from '@/utils/date'
 import { Separator } from '@/components/ui/separator'
 
 const { t } = useI18n()
-const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
 
@@ -19,8 +15,6 @@ const appVersion = __APP_VERSION__
 const buildTimeFormatted = computed(() => formatLocalTimestamp(__BUILD_TIME__))
 const currentYear = new Date().getFullYear()
 const copyrightText = computed(() => t('about.copyright', { year: currentYear }))
-
-const wikiHomeUrl = computed(() => buildWikiDocUrl(preferences.locale, 'start'))
 
 const techStackItems = [
   { name: 'Vue 3', role: 'UI Framework' },

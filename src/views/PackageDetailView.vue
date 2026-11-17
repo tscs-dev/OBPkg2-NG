@@ -24,6 +24,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
+import { hasValidAuthor } from '@/utils/package'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,8 +84,10 @@ const secondaryName = computed(() => {
   return preferences.formatSecondaryS3(pkg.value.Name)
 })
 
+const isRepost = computed(() => hasValidAuthor(pkg.value?.Author))
+
 const authorDisplayName = computed(() => {
-  if (!pkg.value?.Author) return ''
+  if (!isRepost.value || !pkg.value?.Author) return ''
   return preferences.formatS3(pkg.value.Author.Name)
 })
 
@@ -288,10 +291,19 @@ watchEffect(() => {
               <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-muted-foreground tabular-nums">
                 <PlatformBadge :platforms="pkg.Platforms" variant="label" />
                 <span aria-hidden="true">·</span>
-                <span v-if="authorDisplayName || uploaderDisplayName">
-                  {{ authorDisplayName || uploaderDisplayName }}
-                </span>
-                <span v-if="authorDisplayName || uploaderDisplayName" aria-hidden="true">·</span>
+                <template v-if="isRepost && authorDisplayName">
+                  <span>{{ authorDisplayName }}</span>
+                  <span aria-hidden="true">·</span>
+                </template>
+                <template v-else-if="pkg.Uploader">
+                  <router-link
+                    :to="`/uploaders/${pkg.Uploader.ID}`"
+                    class="text-foreground/85 hover:text-primary hover:underline underline-offset-4"
+                  >
+                    {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
+                  </router-link>
+                  <span aria-hidden="true">·</span>
+                </template>
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <time :datetime="pkg.UpdatedAt">{{ formatDateShort(pkg.UpdatedAt) }}</time>
@@ -415,7 +427,7 @@ watchEffect(() => {
                 </h2>
 
                 <!-- 转载场景：先展示原作者，再展示上传者 -->
-                <div v-if="pkg.Author" class="flex flex-col gap-3">
+                <div v-if="isRepost && pkg.Author" class="flex flex-col gap-3">
                   <div class="space-y-1">
                     <div class="text-xs text-muted-foreground">
                       {{ t('detail.meta.originalAuthor') }}
@@ -451,9 +463,12 @@ watchEffect(() => {
                       <div class="text-xs text-muted-foreground">
                         {{ t('detail.meta.uploader') }}
                       </div>
-                      <div class="text-sm font-medium text-foreground break-words">
+                      <router-link
+                        :to="`/uploaders/${pkg.Uploader.ID}`"
+                        class="text-sm font-medium text-foreground hover:text-primary hover:underline underline-offset-4 break-words inline-block"
+                      >
                         {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
-                      </div>
+                      </router-link>
                       <div v-if="pkg.Uploader.Email" class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
                         <a
                           :href="`mailto:${pkg.Uploader.Email}`"
@@ -472,9 +487,12 @@ watchEffect(() => {
                   <div class="text-xs text-muted-foreground">
                     {{ t('detail.meta.author') }}
                   </div>
-                  <div class="text-sm font-medium text-foreground break-words">
+                  <router-link
+                    :to="`/uploaders/${pkg.Uploader.ID}`"
+                    class="text-sm font-medium text-foreground hover:text-primary hover:underline underline-offset-4 break-words inline-block"
+                  >
                     {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
-                  </div>
+                  </router-link>
                   <div class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
                     <a
                       v-if="pkg.Uploader.Email"

@@ -21,18 +21,30 @@ export class ApiError extends Error {
   }
 }
 
-let tokenGetter: (() => string | null) | null = null
-let unauthorizedHandler: (() => void) | null = null
-
-export function configureApiAuthHooks(options: {
+interface AuthClientHooks {
   getToken: () => string | null
-  onUnauthorized?: () => void
-}) {
-  tokenGetter = options.getToken
-  unauthorizedHandler = options.onUnauthorized ?? null
+  ensureValidToken: () => Promise<string | null>
+  getFreshTokenFromStorage: (failedToken: string | null) => string | null
+  onSessionExpired: () => void
 }
 
-export const apiClient = ofetch.create({
+let authHooks: AuthClientHooks | null = null
+
+export function configureApiAuthHooks(hooks: AuthClientHooks) {
+  authHooks = hooks
+}
+
+function isAuthEndpoint(request: RequestInfo): boolean {
+  const url = typeof request === 'string' ? request : request.url
+  return url.includes('/auth/')
+}
+
+function isIdempotentMethod(method?: string): boolean {
+  const m = (method ?? 'GET').toUpperCase()
+  return m === 'GET' || m === 'HEAD'
+}
+
+export const bareApiClient = ofetch.create({
   baseURL: ENV.apiRootUrl,
   timeout: 20_000,
   onRequest({ options }) {
@@ -40,18 +52,69 @@ export const apiClient = ofetch.create({
     if (!headers.has('Accept')) {
       headers.set('Accept', 'application/json')
     }
-    const token = tokenGetter?.()
-    if (token && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${token}`)
-    }
     options.headers = headers
   },
   onResponseError({ response }) {
     const payload = response._data as BackendErrorPayload | undefined
-    const code = payload?.ErrorCode
-    if (code === 211 && unauthorizedHandler) {
-      unauthorizedHandler()
+    throw new ApiError(
+      payload?.Msg || response.statusText || 'Request failed',
+      response.status,
+      payload?.ErrorCode,
+      payload?.Data,
+    )
+  },
+})
+
+export const apiClient = ofetch.create({
+  baseURL: ENV.apiRootUrl,
+  timeout: 20_000,
+  async onRequest({ request, options }) {
+    const headers = new Headers(options.headers)
+    if (!headers.has('Accept')) {
+      headers.set('Accept', 'application/json')
     }
+
+    if (!headers.has('Authorization') && authHooks) {
+      const token = isAuthEndpoint(request)
+        ? authHooks.getToken()
+        : await authHooks.ensureValidToken()
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+    }
+
+    options.headers = headers
+  },
+  async onResponseError({ request, response, options }) {
+    const payload = response._data as BackendErrorPayload | undefined
+    const code = payload?.ErrorCode
+    const isAuthFailure = response.status === 401 || code === 211
+
+    if (isAuthFailure && !isAuthEndpoint(request) && authHooks) {
+      const reqHeaders = new Headers(options.headers)
+      const authHeader = reqHeaders.get('Authorization')
+      const usedToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+      const alreadyRetried = reqHeaders.get('X-OBPkg-Retried') === '1'
+
+      // 仅对幂等 GET/HEAD 且检测到其他标签页已写入更新的有效 Token 时静默重试 1 次
+      if (!alreadyRetried && isIdempotentMethod(options.method)) {
+        const freshToken = authHooks.getFreshTokenFromStorage(usedToken)
+        if (freshToken) {
+          reqHeaders.set('Authorization', `Bearer ${freshToken}`)
+          reqHeaders.set('X-OBPkg-Retried', '1')
+          options.headers = reqHeaders
+          const retriedData = await apiClient(request, {
+            ...options,
+            headers: reqHeaders,
+          })
+          response._data = retriedData
+          return
+        }
+      }
+
+      authHooks.onSessionExpired()
+    }
+
     throw new ApiError(
       payload?.Msg || response.statusText || 'Request failed',
       response.status,
