@@ -88,7 +88,9 @@ const router = createRouter({
       component: () => import('@/views/auth/RegisterView.vue'),
     },
     {
-      path: '/auth/activate/:token',
+      // Keep legacy path, as this is a part of the URL
+      // the backend sends with an activation email.
+      path: '/user/activate/:token',
       name: 'activate',
       component: () => import('@/views/auth/ActivateView.vue'),
     },
