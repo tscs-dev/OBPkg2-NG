@@ -1,6 +1,6 @@
 export default {
   brand: {
-    title: 'HmmsimRoutes',
+    title: 'HSRoutes',
     subtitle: '内容注册系统',
   },
   nav: {
@@ -140,8 +140,8 @@ export default {
   uploader: {
     breadcrumb: '作者主页',
     roleSuperAdmin: '高级管理员',
-    roleAdmin: '版务专员',
-    roleModerator: '内容专员',
+    roleAdmin: '站务专员',
+    roleModerator: '版务专员',
     websiteButton: '个人网站',
     visitWebsiteTitle: '访问作者网站',
     editProfileButton: '编辑个人资料',
@@ -437,13 +437,13 @@ export default {
     loadError: '图片未能加载，可尝试在新窗口打开原图查看。',
   },
   about: {
-    systemTitle: 'HmmsimRoutes 内容注册系统',
-    systemSubtitle: 'HmmsimRoutes Package Registry',
+    systemTitle: 'HSRoutes 内容注册系统',
+    systemSubtitle: 'HSRoutes Package Registry',
     softwareName: 'OBPkg2-NG',
     copyright: '版权所有 © Zbx1425 2020-{year}',
     overviewTitle: '关于我们',
     overviewBody1:
-      'HmmsimRoutes 致力于为铁路模拟社区的内容创作者和使用者提供一个完善而易用的在线内容平台。',
+      'HSRoutes 致力于为铁路模拟社区的内容创作者和使用者提供一个完善而易用的在线内容平台。',
     overviewBody2:
       '所有可供公开下载的资源文件条目在发布前均需经过管理员人工审核，以保障文件可用性及基本的版权合规要求。',
     copyrightSectionTitle: '版权与运营声明',

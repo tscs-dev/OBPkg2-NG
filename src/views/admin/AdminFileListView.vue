@@ -389,9 +389,6 @@ watchEffect(() => {
                   {{ t('adminFiles.headers.versionPlatform') }}
                 </th>
                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap">
-                  {{ t('adminFiles.headers.sizePath') }}
-                </th>
-                <th scope="col" class="py-2.5 px-3 whitespace-nowrap">
                   {{ t('detail.tableHeaders.status') }}
                 </th>
                 <th scope="col" class="py-2.5 px-3 text-right whitespace-nowrap">
@@ -428,17 +425,6 @@ watchEffect(() => {
                       v{{ file.Version }}
                     </span>
                     <PlatformBadge :platforms="[file.Platform]" variant="label" />
-                  </div>
-                </td>
-
-                <td class="py-2.5 px-3 max-w-[220px]">
-                  <div class="text-xs text-foreground tabular-nums">{{ file.Size }}</div>
-                  <div
-                    v-if="file.URLParam"
-                    class="text-[11px] font-mono text-muted-foreground truncate"
-                    :title="file.URLParam"
-                  >
-                    {{ file.URLParam }}
                   </div>
                 </td>
 

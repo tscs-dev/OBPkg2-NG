@@ -366,6 +366,7 @@ watchEffect(() => {
                   <div class="min-w-0 leading-snug">
                     <div class="font-medium text-foreground">{{ item.label }}</div>
                     <div
+                      v-if="item.status !== 'ok'"
                       class="text-[11px]"
                       :class="
                         item.status === 'error'
