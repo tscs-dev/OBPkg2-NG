@@ -426,6 +426,16 @@ export default {
     browsePackages: '浏览作品目录',
     goBack: '返回上一页',
   },
+  lightbox: {
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    actualSize: '原始像素 (1:1)',
+    resetView: '适应窗口',
+    prev: '上一张',
+    next: '下一张',
+    openOriginal: '新窗口打开原图',
+    loadError: '图片未能加载，可尝试在新窗口打开原图查看。',
+  },
   about: {
     systemTitle: 'HmmsimRoutes 内容注册系统',
     systemSubtitle: 'HmmsimRoutes Package Registry',

@@ -13,18 +13,12 @@ import {
 } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
 import PackageThumbnail from '@/components/package/PackageThumbnail.vue'
+import ImageLightbox from '@/components/common/ImageLightbox.vue'
 import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/packages'
 import { uploadImageToLsky } from '@/api/lsky'
 import { updatePackage } from '@/api/packages'
 import { formatApiErrorMessage } from '@/api/auth'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 
 const route = useRoute()
 const { t, te } = useI18n()
@@ -263,17 +257,11 @@ async function handleSave() {
       </template>
     </FormPanel>
 
-    <!-- 高清灯箱 -->
-    <Dialog v-model:open="lightboxOpen">
-      <DialogContent class="max-w-4xl rounded-none p-2 sm:p-3">
-        <DialogHeader class="sr-only">
-          <DialogTitle>{{ t('packageEdit.gallery.panelTitle') }}</DialogTitle>
-          <DialogDescription>{{ t('detail.zoomImage') }}</DialogDescription>
-        </DialogHeader>
-        <div v-if="hasCover" class="flex items-center justify-center bg-black/5 max-h-[85vh] overflow-auto">
-          <img :src="thumbnail" alt="Banner" class="max-w-full max-h-[82vh] object-contain" />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <!-- 全屏可缩放拖动灯箱 -->
+    <ImageLightbox
+      v-model:open="lightboxOpen"
+      :src="thumbnail"
+      :alt="t('packageEdit.gallery.panelTitle')"
+    />
   </form>
 </template>

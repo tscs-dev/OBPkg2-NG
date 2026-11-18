@@ -17,6 +17,7 @@ import {
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
 import HomepageCtaButton from '@/components/package/HomepageCtaButton.vue'
+import ImageLightbox, { type LightboxImageItem } from '@/components/common/ImageLightbox.vue'
 import { useUploaderDetailQuery } from '@/queries/uploaders'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
@@ -28,13 +29,6 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   Tooltip,
   TooltipContent,
@@ -251,21 +245,33 @@ const pagedPackages = computed(() => {
   return filteredPackages.value.slice(start, start + PAGE_SIZE)
 })
 
-// 图片点击放大灯箱
-const lightboxUrl = ref<string | null>(null)
-const lightboxOpen = computed({
-  get: () => Boolean(lightboxUrl.value),
-  set: (val: boolean) => {
-    if (!val) lightboxUrl.value = null
-  },
+// 图片点击放大灯箱（支持多图翻页）
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
+
+const lightboxImages = computed<LightboxImageItem[]>(() => {
+  if (!sanitizedBio.value || typeof DOMParser === 'undefined') return []
+  const list: LightboxImageItem[] = []
+  const seen = new Set<string>()
+  const doc = new DOMParser().parseFromString(sanitizedBio.value, 'text/html')
+  doc.querySelectorAll('img[src]').forEach((img) => {
+    const src = img.getAttribute('src')?.trim()
+    if (!src || seen.has(src)) return
+    seen.add(src)
+    list.push({ src, alt: img.getAttribute('alt') || primaryName.value })
+  })
+  return list
 })
 
 function handleProseClick(e: MouseEvent) {
   const target = e.target as HTMLElement | null
   if (target && target.tagName === 'IMG') {
-    const src = (target as HTMLImageElement).src
+    const imgEl = target as HTMLImageElement
+    const src = (imgEl.getAttribute('src') || imgEl.src)?.trim()
     if (src) {
-      lightboxUrl.value = src
+      const idx = lightboxImages.value.findIndex((item) => item.src === src)
+      lightboxIndex.value = idx >= 0 ? idx : 0
+      lightboxOpen.value = true
     }
   }
 }
@@ -724,21 +730,12 @@ watchEffect(() => {
       </div>
     </template>
 
-    <!-- 图片预览灯箱 -->
-    <Dialog v-model:open="lightboxOpen">
-      <DialogContent class="max-w-4xl rounded-none p-2 sm:p-3">
-        <DialogHeader class="sr-only">
-          <DialogTitle>{{ primaryName }}</DialogTitle>
-          <DialogDescription>{{ t('detail.zoomImage') }}</DialogDescription>
-        </DialogHeader>
-        <div v-if="lightboxUrl" class="flex items-center justify-center bg-black/5 max-h-[85vh] overflow-auto">
-          <img
-            :src="lightboxUrl"
-            :alt="primaryName"
-            class="max-w-full max-h-[82vh] object-contain"
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <!-- 全屏可缩放拖动灯箱 -->
+    <ImageLightbox
+      v-model:open="lightboxOpen"
+      :images="lightboxImages"
+      :initial-index="lightboxIndex"
+      :alt="primaryName"
+    />
   </div>
 </template>
