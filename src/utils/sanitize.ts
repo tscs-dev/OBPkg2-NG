@@ -90,15 +90,25 @@ export function sanitizePackageHtml(rawHtml: string | undefined): string {
   })
 
   const doc = new DOMParser().parseFromString(cleaned, 'text/html')
+
   doc.querySelectorAll('a[href]').forEach((anchor) => {
-    const href = anchor.getAttribute('href') ?? ''
+    let href = (anchor.getAttribute('href') ?? '').trim()
+    if (href && !href.startsWith('https://') && !href.startsWith('http://') && !href.startsWith('mailto:') && !href.startsWith('#')) {
+      href = `https://${href}`
+      anchor.setAttribute('href', href)
+    }
     if (href.startsWith('http://') || href.startsWith('https://')) {
       anchor.setAttribute('target', '_blank')
       anchor.setAttribute('rel', 'noopener noreferrer')
     }
   })
 
-  doc.querySelectorAll('img').forEach((img) => {
+  doc.querySelectorAll('img[src]').forEach((img) => {
+    let src = (img.getAttribute('src') ?? '').trim()
+    if (src && !src.startsWith('https://') && !src.startsWith('http://') && !src.startsWith('data:')) {
+      src = `https://${src}`
+      img.setAttribute('src', src)
+    }
     img.setAttribute('loading', 'lazy')
   })
 

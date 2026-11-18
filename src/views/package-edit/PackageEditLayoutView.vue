@@ -397,7 +397,7 @@ watchEffect(() => {
       </template>
 
       <!-- 右侧内容区 -->
-      <div class="max-w-3xl">
+      <div :class="route.name === 'package-edit-description' ? '' : 'max-w-3xl'">
         <div v-if="!isCreateMode && packageQuery.isPending.value" class="space-y-4">
           <Skeleton class="h-10 w-full rounded-none" />
           <Skeleton class="h-44 w-full rounded-none" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useClipboard } from '@vueuse/core'
@@ -10,7 +10,6 @@ import {
   Download,
   ExternalLink,
   Mail,
-  MessageSquare,
   Pencil,
   RefreshCw,
   ZoomIn,
@@ -42,7 +41,7 @@ type DetailTab = 'description' | 'downloads' | 'comments'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
@@ -102,6 +101,44 @@ const filesCount = computed(() => visibleFiles.value.length)
 const sanitizedDescription = computed(() =>
   sanitizePackageHtml(pkg.value?.Description),
 )
+
+// 评论 iframe
+const commentLangMap: Record<string, string> = {
+  'zh-CN': 'zh-cn',
+  'en': 'en-us',
+  'ja': 'ja-jp',
+}
+
+const commentIframeSrc = computed(() => {
+  if (!pkg.value) return ''
+  const lang = commentLangMap[locale.value] ?? locale.value
+  const params = new URLSearchParams({ lang, pkg: pkg.value.Identifier })
+  return `https://bvecs.zbx1425.cn/bcs-ugc/commentview.php?${params.toString()}`
+})
+
+const commentIframeHeight = ref(300)
+const commentIframeLoaded = ref(false)
+
+function handleCommentMessage(e: MessageEvent) {
+  if (e.data && e.data.type === 'bcs-ugc-height' && typeof e.data.height === 'number') {
+    commentIframeHeight.value = e.data.height
+    commentIframeLoaded.value = true
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('message', handleCommentMessage)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleCommentMessage)
+})
+
+watch(activeTab, (tab) => {
+  if (tab !== 'comments') {
+    commentIframeLoaded.value = false
+  }
+})
 
 // 缩略图及描述中图片点击放大灯箱（支持多图翻页）
 const lightboxOpen = ref(false)
@@ -417,16 +454,28 @@ watchEffect(() => {
                 />
               </TabsContent>
 
-              <!-- Tab 3: 评论占位 -->
+              <!-- Tab 3: 评论 (iframe) -->
               <TabsContent value="comments" class="pt-5 mt-0">
-                <div class="border border-dashed border-border py-12 px-6 text-center space-y-2">
-                  <MessageSquare class="size-5 mx-auto text-muted-foreground/70" />
-                  <p class="text-sm font-medium text-foreground">
-                    {{ t('detail.commentsPlaceholderTitle') }}
-                  </p>
-                  <p class="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    {{ t('detail.commentsPlaceholderDesc') }}
-                  </p>
+                <div class="relative">
+                  <!-- Skeleton 占位：iframe 加载完成前可见 -->
+                  <div v-if="!commentIframeLoaded" class="space-y-4 py-2">
+                    <Skeleton class="h-5 w-32 rounded-none" />
+                    <Skeleton class="h-4 w-full rounded-none" />
+                    <Skeleton class="h-4 w-5/6 rounded-none" />
+                    <Skeleton class="h-4 w-3/4 rounded-none" />
+                    <div class="pt-2 space-y-3">
+                      <Skeleton class="h-5 w-24 rounded-none" />
+                      <Skeleton class="h-20 w-full rounded-none" />
+                    </div>
+                  </div>
+                  <!-- iframe：加载完成前不可见但仍在 DOM 中正常加载 -->
+                  <iframe
+                    :src="commentIframeSrc"
+                    :style="{ height: `${commentIframeHeight}px` }"
+                    class="w-full border-0 transition-opacity duration-200"
+                    :class="commentIframeLoaded ? 'opacity-100 relative' : 'opacity-0 absolute inset-0'"
+                    :title="t('detail.tabs.comments')"
+                  />
                 </div>
               </TabsContent>
             </Tabs>

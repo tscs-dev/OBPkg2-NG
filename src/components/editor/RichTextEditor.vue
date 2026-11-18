@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { EditorContent, Node, mergeAttributes, useEditor } from '@tiptap/vue-3'
+import { EditorContent, Node, mergeAttributes, useEditor, Extension } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import {
   Bold,
+  Check,
   Code,
   CodeXml,
   Heading2,
@@ -22,12 +23,20 @@ import {
   Strikethrough,
   Underline,
   Undo2,
-  Unlink,
   Upload,
+  X,
 } from '@lucide/vue'
 import { uploadImageToLsky } from '@/api/lsky'
 import { sanitizePackageHtml } from '@/utils/sanitize'
-import { Button } from '@/components/ui/button'
+import {
+  ImageUploadPlaceholder,
+  findPlaceholderPos,
+  type UploadState,
+} from './extensions/imageUploadPlaceholder'
+import LinkPopover from './LinkPopover.vue'
+import LinkBubbleMenu from './LinkBubbleMenu.vue'
+import ImageBubbleMenu from './ImageBubbleMenu.vue'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface Props {
   modelValue: string
@@ -46,7 +55,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 /**
- * 轻量内置 Image 节点（支持 img[src] 与兼容旧版 CKEditor 生成的 <figure class="image"><img ...></figure>）
+ * 轻量内置 Image 节点（支持 img[src] 与兼容旧版 CKEditor 的 <figure class="image"><img></figure>）
  */
 const SimpleImage = Node.create({
   name: 'image',
@@ -56,15 +65,9 @@ const SimpleImage = Node.create({
 
   addAttributes() {
     return {
-      src: {
-        default: null,
-      },
-      alt: {
-        default: null,
-      },
-      title: {
-        default: null,
-      },
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
     }
   },
 
@@ -82,9 +85,7 @@ const SimpleImage = Node.create({
           }
         },
       },
-      {
-        tag: 'img[src]',
-      },
+      { tag: 'img[src]' },
     ]
   },
 
@@ -95,16 +96,30 @@ const SimpleImage = Node.create({
 
 const isSourceMode = ref(false)
 const sourceHtml = ref(props.modelValue)
-const isUploadingImage = ref(false)
-const uploadError = ref('')
 
-const showLinkBar = ref(false)
-const linkUrlInput = ref('')
-
-const showImageUrlBar = ref(false)
+const linkPopoverOpen = ref(false)
+const imageUrlPopoverOpen = ref(false)
 const imageUrlInput = ref('')
+const imageAltInput = ref('')
+const isImageUrlValid = computed(() => imageUrlInput.value.trim().startsWith('https://'))
+const isDraggingOver = ref(false)
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+/**
+ * Ctrl+K 快捷键扩展 — toggle 链接 Popover
+ */
+const LinkKeyboardShortcut = Extension.create({
+  name: 'linkKeyboardShortcut',
+  addKeyboardShortcuts() {
+    return {
+      'Mod-k': () => {
+        linkPopoverOpen.value = !linkPopoverOpen.value
+        return true
+      },
+    }
+  },
+})
 
 const editor = useEditor({
   content: props.modelValue || '',
@@ -116,10 +131,39 @@ const editor = useEditor({
       },
     }),
     SimpleImage,
+    ImageUploadPlaceholder,
+    LinkKeyboardShortcut,
   ],
   editorProps: {
     attributes: {
       class: 'prose prose-sm sm:prose-base max-w-none package-prose min-h-[340px] px-4 py-3',
+    },
+    handleDrop(view, event, _slice, moved) {
+      if (moved) return false
+      const files = Array.from(event.dataTransfer?.files ?? [])
+      const images = files.filter((f) => f.type.startsWith('image/'))
+      if (!images.length) return false
+
+      event.preventDefault()
+      const coords = view.posAtCoords({ left: event.clientX, top: event.clientY })
+      const dropPos = coords?.pos
+      for (const file of images) {
+        startImageUpload(file, dropPos)
+      }
+      isDraggingOver.value = false
+      return true
+    },
+    handlePaste(_view, event) {
+      const items = Array.from(event.clipboardData?.items ?? [])
+      const imageItems = items.filter((item) => item.type.startsWith('image/'))
+      if (!imageItems.length) return false
+
+      event.preventDefault()
+      for (const item of imageItems) {
+        const file = item.getAsFile()
+        if (file) startImageUpload(file)
+      }
+      return true
     },
   },
   onUpdate({ editor: instance }) {
@@ -129,6 +173,164 @@ const editor = useEditor({
     emit('update:modelValue', normalized)
   },
 })
+
+/* ---------- upload state ---------- */
+
+function getUploadsMap(): Map<string, UploadState> | undefined {
+  return (editor.value?.storage as any)?.imageUploadPlaceholder?.uploads
+}
+
+const activeUploadCount = computed(() => {
+  const uploads = getUploadsMap()
+  if (!uploads) return 0
+  let count = 0
+  for (const s of uploads.values()) {
+    if (s.status === 'uploading') count++
+  }
+  return count
+})
+
+const hasActiveUploads = computed(() => activeUploadCount.value > 0)
+
+defineExpose({ hasActiveUploads })
+
+/* ---------- image upload core ---------- */
+
+function startImageUpload(file: File, insertPos?: number) {
+  const instance = editor.value
+  if (!instance) return
+
+  const uploadId = crypto.randomUUID()
+  const uploads = (instance.storage as any).imageUploadPlaceholder.uploads as Map<string, UploadState>
+
+  uploads.set(uploadId, { status: 'uploading', fileName: file.name, file })
+
+  if (insertPos != null) {
+    instance
+      .chain()
+      .insertContentAt(insertPos, {
+        type: 'imageUploadPlaceholder',
+        attrs: { uploadId },
+      })
+      .run()
+  } else {
+    instance
+      .chain()
+      .focus()
+      .insertContent({
+        type: 'imageUploadPlaceholder',
+        attrs: { uploadId },
+      })
+      .run()
+  }
+
+  void (async () => {
+    try {
+      const result = await uploadImageToLsky(file)
+      const pos = findPlaceholderPos(instance, uploadId)
+      if (pos !== null) {
+        instance
+          .chain()
+          .deleteRange({ from: pos, to: pos + 1 })
+          .insertContentAt(pos, { type: 'image', attrs: { src: result.fullUrl } })
+          .run()
+      }
+      uploads.delete(uploadId)
+    } catch (err) {
+      const state = uploads.get(uploadId)
+      if (state) {
+        state.status = 'error'
+        state.error = err instanceof Error ? err.message : t('editor.uploadError')
+      }
+    }
+  })()
+}
+
+/* ---------- toolbar upload button ---------- */
+
+function triggerImageUpload() {
+  fileInputRef.value?.click()
+}
+
+function handleImageFileSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  input.value = ''
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      startImageUpload(file)
+    }
+  }
+}
+
+/* ---------- image URL popover ---------- */
+
+function insertImageUrl() {
+  const instance = editor.value
+  const src = imageUrlInput.value.trim()
+  if (!instance || !src || !src.startsWith('https://')) return
+  const attrs: Record<string, string> = { src }
+  const alt = imageAltInput.value.trim()
+  if (alt) attrs.alt = alt
+  instance.chain().focus().insertContent({ type: 'image', attrs }).run()
+  imageUrlInput.value = ''
+  imageAltInput.value = ''
+  imageUrlPopoverOpen.value = false
+}
+
+/* ---------- source mode ---------- */
+
+function toggleSourceMode() {
+  const instance = editor.value
+  if (!isSourceMode.value) {
+    sourceHtml.value = instance
+      ? instance.getHTML() === '<p></p>'
+        ? ''
+        : instance.getHTML()
+      : props.modelValue
+    linkPopoverOpen.value = false
+    imageUrlPopoverOpen.value = false
+    isSourceMode.value = true
+  } else {
+    const safeHtml = sanitizePackageHtml(sourceHtml.value)
+    sourceHtml.value = safeHtml
+    instance?.commands.setContent(safeHtml || '', { emitUpdate: false })
+    emit('update:modelValue', safeHtml)
+    isSourceMode.value = false
+  }
+}
+
+function handleSourceInput(e: Event) {
+  const val = (e.target as HTMLTextAreaElement).value
+  sourceHtml.value = val
+  emit('update:modelValue', val)
+}
+
+/* ---------- link bubble → popover bridge ---------- */
+
+function handleEditLinkFromBubble() {
+  setTimeout(() => {
+    linkPopoverOpen.value = true
+  }, 0)
+}
+
+/* ---------- drag visual ---------- */
+
+function handleDragOver(e: DragEvent) {
+  if (e.dataTransfer?.types.includes('Files')) {
+    isDraggingOver.value = true
+  }
+}
+
+function handleDragLeave() {
+  isDraggingOver.value = false
+}
+
+function handleDropOnRoot() {
+  isDraggingOver.value = false
+}
+
+/* ---------- watchers ---------- */
 
 watch(
   () => props.disabled,
@@ -159,107 +361,22 @@ watch(
 onBeforeUnmount(() => {
   editor.value?.destroy()
 })
-
-function toggleSourceMode() {
-  const instance = editor.value
-  if (!isSourceMode.value) {
-    sourceHtml.value = instance
-      ? instance.getHTML() === '<p></p>'
-        ? ''
-        : instance.getHTML()
-      : props.modelValue
-    showLinkBar.value = false
-    showImageUrlBar.value = false
-    isSourceMode.value = true
-  } else {
-    const safeHtml = sanitizePackageHtml(sourceHtml.value)
-    sourceHtml.value = safeHtml
-    instance?.commands.setContent(safeHtml || '', { emitUpdate: false })
-    emit('update:modelValue', safeHtml)
-    isSourceMode.value = false
-  }
-}
-
-function handleSourceInput(e: Event) {
-  const val = (e.target as HTMLTextAreaElement).value
-  sourceHtml.value = val
-  emit('update:modelValue', val)
-}
-
-function openLinkBar() {
-  const instance = editor.value
-  if (!instance) return
-  showImageUrlBar.value = false
-  const prevHref = (instance.getAttributes('link').href as string | undefined) ?? ''
-  linkUrlInput.value = prevHref
-  showLinkBar.value = !showLinkBar.value
-}
-
-function applyLink() {
-  const instance = editor.value
-  if (!instance) return
-  const href = linkUrlInput.value.trim()
-  if (!href) {
-    instance.chain().focus().extendMarkRange('link').unsetLink().run()
-  } else {
-    instance.chain().focus().extendMarkRange('link').setLink({ href }).run()
-  }
-  showLinkBar.value = false
-}
-
-function removeLink() {
-  editor.value?.chain().focus().extendMarkRange('link').unsetLink().run()
-  showLinkBar.value = false
-}
-
-function insertImageUrl() {
-  const instance = editor.value
-  const src = imageUrlInput.value.trim()
-  if (!instance || !src) return
-  instance
-    .chain()
-    .focus()
-    .insertContent({ type: 'image', attrs: { src } })
-    .run()
-  imageUrlInput.value = ''
-  showImageUrlBar.value = false
-}
-
-function triggerImageUpload() {
-  uploadError.value = ''
-  fileInputRef.value?.click()
-}
-
-async function handleImageFileSelected(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file || !editor.value) return
-
-  isUploadingImage.value = true
-  uploadError.value = ''
-  try {
-    const result = await uploadImageToLsky(file)
-    editor.value
-      .chain()
-      .focus()
-      .insertContent({ type: 'image', attrs: { src: result.fullUrl } })
-      .run()
-  } catch (err) {
-    uploadError.value = err instanceof Error ? err.message : t('editor.uploadError')
-  } finally {
-    isUploadingImage.value = false
-  }
-}
 </script>
 
 <template>
-  <div class="border border-border bg-background">
+  <div
+    class="border border-border bg-background transition-colors"
+    :class="isDraggingOver ? 'border-primary bg-primary/5' : ''"
+    @dragover.prevent="handleDragOver"
+    @dragleave.prevent="handleDragLeave"
+    @drop.prevent="handleDropOnRoot"
+  >
     <!-- 吸顶工具栏 -->
     <div
       class="sticky top-12 z-20 bg-muted/85 backdrop-blur-xs border-b border-border px-2 py-1.5 flex flex-wrap items-center justify-between gap-1.5"
     >
       <div v-if="editor && !isSourceMode" class="flex flex-wrap items-center gap-0.5">
+        <!-- 段落 & 标题 -->
         <button
           type="button"
           class="h-7 px-2 inline-flex items-center justify-center text-xs transition-colors cursor-pointer"
@@ -293,6 +410,7 @@ async function handleImageFileSelected(e: Event) {
 
         <span class="mx-1 h-4 w-px bg-border" aria-hidden="true" />
 
+        <!-- 文字格式 -->
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
@@ -346,6 +464,7 @@ async function handleImageFileSelected(e: Event) {
 
         <span class="mx-1 h-4 w-px bg-border" aria-hidden="true" />
 
+        <!-- 列表 & 引用 -->
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
@@ -388,42 +507,109 @@ async function handleImageFileSelected(e: Event) {
 
         <span class="mx-1 h-4 w-px bg-border" aria-hidden="true" />
 
-        <button
-          type="button"
-          class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('link') || showLinkBar ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
-          :title="t('editor.link')"
-          :disabled="disabled"
-          @click="openLinkBar"
-        >
-          <Link2 class="size-3.5" />
-        </button>
+        <!-- 链接 Popover -->
+        <LinkPopover v-model:open="linkPopoverOpen" :editor="editor" :disabled="disabled">
+          <button
+            type="button"
+            class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
+            :class="editor.isActive('link') || linkPopoverOpen ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+            :title="t('editor.link')"
+            :disabled="disabled"
+          >
+            <Link2 class="size-3.5" />
+          </button>
+        </LinkPopover>
 
+        <!-- 上传图片按钮 -->
         <button
           type="button"
           class="h-7 px-2 inline-flex items-center gap-1 text-xs text-foreground/80 hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
           :title="t('editor.uploadImage')"
-          :disabled="disabled || isUploadingImage"
+          :disabled="disabled"
           @click="triggerImageUpload"
         >
-          <Loader2 v-if="isUploadingImage" class="size-3.5 animate-spin text-primary" />
+          <Loader2 v-if="hasActiveUploads" class="size-3.5 animate-spin text-primary" />
           <Upload v-else class="size-3.5" />
-          <span class="hidden sm:inline">{{ t('editor.uploadImageShort') }}</span>
+          <span class="hidden sm:inline">
+            {{ hasActiveUploads ? t('editor.uploading_count', { count: activeUploadCount }) : t('editor.uploadImageShort') }}
+          </span>
         </button>
 
-        <button
-          type="button"
-          class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="showImageUrlBar ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
-          :title="t('editor.insertImageUrl')"
-          :disabled="disabled"
-          @click="() => { showLinkBar = false; showImageUrlBar = !showImageUrlBar }"
-        >
-          <ImagePlus class="size-3.5" />
-        </button>
+        <!-- 图片 URL Popover -->
+        <Popover v-model:open="imageUrlPopoverOpen">
+          <PopoverTrigger as-child>
+            <button
+              type="button"
+              class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
+              :class="imageUrlPopoverOpen ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+              :title="t('editor.insertImageUrl')"
+              :disabled="disabled"
+            >
+              <ImagePlus class="size-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            :collision-padding="8"
+            class="w-80 p-3 rounded-none"
+            @keydown.escape.prevent="imageUrlPopoverOpen = false; editor.commands.focus()"
+          >
+            <div class="space-y-2">
+              <div class="space-y-1">
+                <label class="text-[11px] font-medium text-muted-foreground">URL</label>
+                <input
+                  v-model="imageUrlInput"
+                  type="url"
+                  :placeholder="t('editor.imageUrlPlaceholder')"
+                  class="w-full h-7 px-2 text-xs bg-background border border-input focus:border-primary focus:outline-none"
+                  :class="imageUrlInput.trim() && !isImageUrlValid ? 'border-destructive' : ''"
+                  @keydown.enter.prevent="insertImageUrl"
+                />
+                <p
+                  v-if="imageUrlInput.trim() && !isImageUrlValid"
+                  class="text-[11px] text-destructive"
+                >
+                  {{ t('editor.urlMustHttps') }}
+                </p>
+              </div>
+              <div class="space-y-1">
+                <label class="text-[11px] font-medium text-muted-foreground">
+                  {{ t('editor.imageAlt') }}
+                </label>
+                <input
+                  v-model="imageAltInput"
+                  type="text"
+                  :placeholder="t('editor.imageAlt')"
+                  class="w-full h-7 px-2 text-xs bg-background border border-input focus:border-primary focus:outline-none"
+                  @keydown.enter.prevent="insertImageUrl"
+                />
+              </div>
+              <div class="flex items-center gap-1.5 pt-1">
+                <button
+                  type="button"
+                  class="h-7 px-2.5 inline-flex items-center gap-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-default"
+                  :disabled="!isImageUrlValid"
+                  @click="insertImageUrl"
+                >
+                  <Check class="size-3" />
+                  {{ t('editor.insert') }}
+                </button>
+                <button
+                  type="button"
+                  class="h-7 w-7 ml-auto inline-flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                  @click="imageUrlPopoverOpen = false; editor.commands.focus()"
+                >
+                  <X class="size-3.5" />
+                </button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         <span class="mx-1 h-4 w-px bg-border" aria-hidden="true" />
 
+        <!-- Undo / Redo -->
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center text-foreground/80 hover:bg-muted transition-colors cursor-pointer disabled:opacity-35"
@@ -448,6 +634,7 @@ async function handleImageFileSelected(e: Event) {
         {{ t('editor.htmlSourceLabel') }}
       </div>
 
+      <!-- 源码切换 -->
       <button
         type="button"
         class="h-7 px-2 inline-flex items-center gap-1.5 text-xs border transition-colors cursor-pointer shrink-0"
@@ -456,7 +643,8 @@ async function handleImageFileSelected(e: Event) {
             ? 'bg-primary text-primary-foreground border-primary'
             : 'bg-background text-foreground/85 border-border hover:bg-muted'
         "
-        :disabled="disabled"
+        :disabled="disabled || hasActiveUploads"
+        :title="hasActiveUploads ? t('editor.waitForUpload') : t('editor.sourceToggle')"
         @click="toggleSourceMode"
       >
         <CodeXml class="size-3.5" />
@@ -464,64 +652,11 @@ async function handleImageFileSelected(e: Event) {
       </button>
     </div>
 
-    <!-- 链接内联输入条 -->
-    <div
-      v-if="showLinkBar && !isSourceMode"
-      class="px-3 py-2 bg-muted/35 border-b border-border flex flex-wrap items-center gap-2 text-xs"
-    >
-      <input
-        v-model="linkUrlInput"
-        type="url"
-        placeholder="https://..."
-        class="flex-1 min-w-[200px] h-7 px-2 bg-background border border-input focus:border-primary focus:outline-none text-xs"
-        @keydown.enter.prevent="applyLink"
-      />
-      <Button type="button" size="xs" class="rounded-none cursor-pointer" @click="applyLink">
-        {{ t('editor.apply') }}
-      </Button>
-      <Button
-        v-if="editor?.isActive('link')"
-        type="button"
-        variant="outline"
-        size="xs"
-        class="rounded-none cursor-pointer"
-        @click="removeLink"
-      >
-        <Unlink class="size-3" />
-        <span>{{ t('editor.unlink') }}</span>
-      </Button>
-    </div>
-
-    <!-- 已有图片 URL 插入条 -->
-    <div
-      v-if="showImageUrlBar && !isSourceMode"
-      class="px-3 py-2 bg-muted/35 border-b border-border flex flex-wrap items-center gap-2 text-xs"
-    >
-      <input
-        v-model="imageUrlInput"
-        type="url"
-        :placeholder="t('editor.imageUrlPlaceholder')"
-        class="flex-1 min-w-[200px] h-7 px-2 bg-background border border-input focus:border-primary focus:outline-none text-xs"
-        @keydown.enter.prevent="insertImageUrl"
-      />
-      <Button type="button" size="xs" class="rounded-none cursor-pointer" @click="insertImageUrl">
-        {{ t('editor.insert') }}
-      </Button>
-    </div>
-
-    <!-- 图片上传错误提示 -->
-    <div
-      v-if="uploadError"
-      role="alert"
-      class="px-3 py-1.5 bg-destructive/10 border-b border-destructive/25 text-xs text-destructive"
-    >
-      {{ uploadError }}
-    </div>
-
     <input
       ref="fileInputRef"
       type="file"
       accept="image/*"
+      multiple
       class="hidden"
       @change="handleImageFileSelected"
     />
@@ -535,6 +670,14 @@ async function handleImageFileSelected(e: Event) {
       class="w-full min-h-[340px] p-4 font-mono text-xs leading-relaxed bg-background text-foreground focus:outline-none resize-y block"
       @input="handleSourceInput"
     />
-    <EditorContent v-else :editor="editor" />
+    <template v-else-if="editor">
+      <EditorContent :editor="editor" />
+      <LinkBubbleMenu
+        :editor="editor"
+        :link-popover-open="linkPopoverOpen"
+        @edit-link="handleEditLinkFromBubble"
+      />
+      <ImageBubbleMenu :editor="editor" />
+    </template>
   </div>
 </template>

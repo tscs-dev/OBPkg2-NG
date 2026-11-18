@@ -155,7 +155,7 @@ watchEffect(() => {
       </template>
 
       <!-- 右侧设置子页面 -->
-      <div class="max-w-3xl">
+      <div :class="route.name === 'settings-bio' ? '' : 'max-w-3xl'">
         <router-view />
       </div>
     </SidebarLayout>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { type ComponentPublicInstance, computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
@@ -21,6 +21,9 @@ const packageId = computed<number | null>(() => {
 })
 
 const packageQuery = usePackageDetailQuery(packageId)
+
+const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean }>>()
+const isEditorBusy = computed(() => editorRef.value?.hasActiveUploads ?? false)
 
 const descriptionHtml = ref('')
 const isSaving = ref(false)
@@ -62,7 +65,7 @@ async function handleSave() {
   <form class="space-y-4" @submit.prevent="handleSave">
     <FormPanel :title="t('packageEdit.description.panelTitle')">
       <div class="p-3">
-        <RichTextEditor v-model="descriptionHtml" :disabled="isSaving" />
+        <RichTextEditor ref="editorRef" v-model="descriptionHtml" :disabled="isSaving" />
       </div>
 
       <template #footer>
@@ -89,7 +92,7 @@ async function handleSave() {
           type="submit"
           size="sm"
           class="rounded-none cursor-pointer"
-          :disabled="isSaving"
+          :disabled="isSaving || isEditorBusy"
         >
           <Loader2 v-if="isSaving" class="size-3.5 animate-spin" />
           <Save v-else class="size-3.5" />

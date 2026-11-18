@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { type ComponentPublicInstance, computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
@@ -29,6 +29,9 @@ const targetUserId = computed<number | null>(() => {
 })
 
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
+
+const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean }>>()
+const isEditorBusy = computed(() => editorRef.value?.hasActiveUploads ?? false)
 
 const bioHtml = ref('')
 const isSaving = ref(false)
@@ -97,7 +100,7 @@ async function handleSave() {
   <form v-else-if="uploaderQuery.data.value" class="space-y-4" @submit.prevent="handleSave">
     <FormPanel :title="t('settings.bio.panelTitle')">
       <div class="p-3">
-        <RichTextEditor v-model="bioHtml" :disabled="isSaving" />
+        <RichTextEditor ref="editorRef" v-model="bioHtml" :disabled="isSaving" />
       </div>
 
       <template #footer>
@@ -124,7 +127,7 @@ async function handleSave() {
           type="submit"
           size="sm"
           class="rounded-none cursor-pointer"
-          :disabled="isSaving"
+          :disabled="isSaving || isEditorBusy"
         >
           <Loader2 v-if="isSaving" class="size-3.5 animate-spin" />
           <Save v-else class="size-3.5" />
