@@ -99,7 +99,7 @@ async function confirmDeleteFile() {
   <div class="space-y-4">
     <!-- 顶部操作栏 -->
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3 text-xs text-muted-foreground">
+      <div class="flex items-center gap-3 text-sm text-muted-foreground">
         <span class="font-semibold text-foreground text-sm">
           {{ t('packageEdit.versions.listTitle') }}
         </span>
@@ -126,7 +126,7 @@ async function confirmDeleteFile() {
     <!-- 按需更新警告提示 -->
     <div
       v-if="sortedFiles.length > 0"
-      class="border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-xs text-amber-950 dark:text-amber-200 leading-relaxed"
+      class="border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-sm text-amber-950 dark:text-amber-200 leading-relaxed"
     >
       <AlertTriangle class="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
       <span>{{ t('packageEdit.versions.keepOldVersionNotice') }}</span>
@@ -152,7 +152,7 @@ async function confirmDeleteFile() {
     <div v-else class="border border-border overflow-x-auto bg-card">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
-          <tr class="bg-muted/45 border-b border-border text-xs font-semibold text-muted-foreground">
+          <tr class="bg-muted/45 border-b border-border text-xs sm:text-sm font-semibold text-muted-foreground">
             <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
               {{ t('detail.tableHeaders.version') }}
             </th>
@@ -185,11 +185,11 @@ async function confirmDeleteFile() {
               <PlatformBadge :platforms="[file.Platform]" variant="label" />
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+            <td class="py-2.5 px-3.5 text-xs sm:text-sm text-muted-foreground tabular-nums whitespace-nowrap">
               {{ file.Size }}
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs">
+            <td class="py-2.5 px-3.5 text-xs sm:text-sm">
               <span
                 v-if="file.NeedValidation && !file.Validated && file.RejectReason"
                 class="inline-flex items-center gap-1.5 text-destructive"
@@ -268,7 +268,7 @@ async function confirmDeleteFile() {
       <DialogContent class="max-w-md rounded-none">
         <DialogHeader>
           <DialogTitle class="text-base">{{ t('packageEdit.versions.deleteConfirmTitle') }}</DialogTitle>
-          <DialogDescription class="text-xs leading-relaxed">
+          <DialogDescription class="text-sm leading-relaxed">
             {{
               deleteTarget
                 ? t('packageEdit.versions.deleteConfirmDesc', { version: deleteTarget.Version })
@@ -277,7 +277,7 @@ async function confirmDeleteFile() {
           </DialogDescription>
         </DialogHeader>
 
-        <p v-if="deleteError" class="text-xs text-destructive" role="alert">
+        <p v-if="deleteError" class="text-sm text-destructive" role="alert">
           {{ deleteError }}
         </p>
 

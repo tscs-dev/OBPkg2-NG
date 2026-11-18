@@ -338,10 +338,10 @@ watchEffect(() => {
             <Separator />
 
             <section class="space-y-2.5 px-1">
-              <h2 class="text-[11px] font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+              <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                 {{ t('packageEdit.checklist.title') }}
               </h2>
-              <ul class="space-y-2 text-xs">
+              <ul class="space-y-2 text-sm">
                 <li
                   v-for="item in checklistItems"
                   :key="item.key"
@@ -367,7 +367,7 @@ watchEffect(() => {
                     <div class="font-medium text-foreground">{{ item.label }}</div>
                     <div
                       v-if="item.status !== 'ok'"
-                      class="text-[11px]"
+                      class="text-xs"
                       :class="
                         item.status === 'error'
                           ? 'text-destructive'
@@ -387,7 +387,7 @@ watchEffect(() => {
 
             <router-link
               :to="`/packages/${packageId}`"
-              class="px-2.5 py-1.5 inline-flex items-center justify-between gap-2 text-xs font-medium text-primary hover:bg-muted/60 transition-colors"
+              class="px-2.5 py-1.5 inline-flex items-center justify-between gap-2 text-sm font-medium text-primary hover:bg-muted/60 transition-colors"
             >
               <span>{{ t('packageEdit.viewPublicPackage') }}</span>
               <ArrowRight class="size-3.5 shrink-0" />

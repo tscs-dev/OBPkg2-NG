@@ -131,7 +131,7 @@ async function handleSubmit() {
     class="border border-border bg-muted/30 p-5 space-y-3"
   >
     <p class="text-sm font-medium text-foreground">{{ t('uploader.notFoundTitle') }}</p>
-    <p class="text-xs text-muted-foreground">
+    <p class="text-sm text-muted-foreground">
       {{ uploaderQuery.error.value?.message || t('errors.network') }}
     </p>
     <Button
@@ -203,7 +203,7 @@ async function handleSubmit() {
 
     <FormPanel title="">
       <template #footer>
-        <div class="min-h-5 flex items-center text-xs">
+        <div class="min-h-5 flex items-center text-sm">
           <span
             v-if="saveError"
             role="alert"

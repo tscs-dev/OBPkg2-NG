@@ -323,7 +323,7 @@ async function handleDeletePackage() {
       </FormRow>
 
       <template v-if="isRepost">
-        <div class="px-4 py-2 bg-muted/25 text-xs font-semibold text-muted-foreground">
+        <div class="px-4 py-2 bg-muted/25 text-sm font-semibold text-muted-foreground">
           {{ t('packageEdit.info.authorNameSection') }}
         </div>
 
@@ -393,7 +393,7 @@ async function handleDeletePackage() {
             :disabled="isSaving"
             class="mt-0.5 accent-primary"
           />
-          <span class="text-xs text-muted-foreground leading-relaxed">
+          <span class="text-sm text-muted-foreground leading-relaxed">
             {{ t('packageEdit.info.forcePopupHint') }}
           </span>
         </label>
@@ -420,7 +420,7 @@ async function handleDeletePackage() {
           <span
             v-if="saveError"
             role="alert"
-            class="inline-flex items-center gap-1.5 text-xs text-destructive"
+            class="inline-flex items-center gap-1.5 text-sm text-destructive"
           >
             <AlertCircle class="size-3.5 shrink-0" />
             <span>{{ saveError }}</span>
@@ -428,7 +428,7 @@ async function handleDeletePackage() {
           <span
             v-else-if="saveSuccess"
             role="status"
-            class="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium"
+            class="inline-flex items-center gap-1.5 text-sm text-emerald-700 dark:text-emerald-400 font-medium"
           >
             <CheckCircle2 class="size-3.5 shrink-0" />
             <span>{{ t('common.saved') }}</span>
@@ -461,12 +461,12 @@ async function handleDeletePackage() {
       <DialogContent class="max-w-md rounded-none">
         <DialogHeader>
           <DialogTitle class="text-base">{{ t('packageEdit.info.deleteConfirmTitle') }}</DialogTitle>
-          <DialogDescription class="text-xs leading-relaxed">
+          <DialogDescription class="text-sm leading-relaxed">
             {{ t('packageEdit.info.deleteConfirmDesc') }}
           </DialogDescription>
         </DialogHeader>
 
-        <p v-if="deleteError" class="text-xs text-destructive" role="alert">
+        <p v-if="deleteError" class="text-sm text-destructive" role="alert">
           {{ deleteError }}
         </p>
 

@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
       <p v-if="error" class="text-xs text-destructive leading-snug" role="alert">
         {{ error }}
       </p>
-      <p v-else-if="hint" class="text-xs text-muted-foreground leading-relaxed">
+      <p v-else-if="hint" class="text-sm text-muted-foreground leading-relaxed">
         {{ hint }}
       </p>
     </div>

@@ -153,7 +153,7 @@ watchEffect(() => {
     <!-- 校验中 -->
     <FormPanel v-if="checking" :title="t('auth.activateTitle')">
       <div class="p-4 space-y-3">
-        <div class="flex items-center gap-2 text-xs text-muted-foreground">
+        <div class="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 class="size-3.5 animate-spin text-primary" />
           <span>{{ t('auth.activateChecking') }}</span>
         </div>
@@ -168,7 +168,7 @@ watchEffect(() => {
       v-else-if="tokenError"
       :title="t('auth.activateExpiredTitle')"
     >
-      <div class="p-4 space-y-3 text-xs leading-relaxed">
+      <div class="p-4 space-y-3 text-sm leading-relaxed">
         <div class="flex items-start gap-2.5 text-destructive">
           <AlertCircle class="size-4 shrink-0 mt-0.5" />
           <span>{{ tokenError }}</span>
@@ -188,7 +188,7 @@ watchEffect(() => {
     <!-- 校验通过：填写密码与显示名称 -->
     <form v-else novalidate @submit.prevent="handleSubmit">
       <FormPanel :title="t('auth.activateTitle')">
-        <div class="px-4 py-2.5 bg-emerald-500/8 flex items-center justify-between gap-2 text-xs">
+        <div class="px-4 py-2.5 bg-emerald-500/8 flex items-center justify-between gap-2 text-sm">
           <span class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
             <CheckCircle2 class="size-3.5 shrink-0" />
             <span>{{ t('auth.activateVerifiedEmail') }}</span>
@@ -199,7 +199,7 @@ watchEffect(() => {
         <div
           v-if="submitError"
           role="alert"
-          class="px-4 py-2.5 bg-destructive/8 text-destructive text-xs flex items-start gap-2 leading-relaxed"
+          class="px-4 py-2.5 bg-destructive/8 text-destructive text-sm flex items-start gap-2 leading-relaxed"
         >
           <AlertCircle class="size-4 shrink-0 mt-0.5" />
           <span>{{ submitError }}</span>

@@ -210,7 +210,7 @@ async function handleSave() {
             </Button>
           </div>
 
-          <p class="text-xs text-muted-foreground leading-relaxed">
+          <p class="text-sm text-muted-foreground leading-relaxed">
             {{ t('packageEdit.gallery.hint') }}
           </p>
         </div>
@@ -225,7 +225,7 @@ async function handleSave() {
       />
 
       <template #footer>
-        <div class="min-h-5 flex items-center text-xs">
+        <div class="min-h-5 flex items-center text-sm">
           <span
             v-if="errorMsg"
             role="alert"

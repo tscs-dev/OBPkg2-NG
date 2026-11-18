@@ -91,7 +91,7 @@ watchEffect(() => {
               <h2 class="text-sm font-semibold tracking-tight text-foreground">
                 {{ t('about.stackTitle') }}
               </h2>
-              <p class="text-xs text-muted-foreground">
+              <p class="text-sm text-muted-foreground">
                 {{ t('about.stackSubtitle') }}
               </p>
             </div>
@@ -102,7 +102,7 @@ watchEffect(() => {
                 :key="item.name"
                 class="px-3.5 py-2.5 border-r border-b border-border flex items-baseline justify-between gap-3"
               >
-                <dt class="text-xs font-medium text-foreground">{{ item.name }}</dt>
+                <dt class="text-sm font-medium text-foreground">{{ item.name }}</dt>
                 <dd class="text-[11px] font-mono text-muted-foreground text-right">{{ item.role }}</dd>
               </div>
             </dl>
@@ -114,14 +114,14 @@ watchEffect(() => {
           <div class="flex flex-col gap-5">
             <!-- 软件铭牌 -->
             <section class="space-y-3">
-              <h2 class="text-xs font-semibold mb-1">
+              <h2 class="text-sm font-semibold mb-1">
                 {{ t('about.softwareName') }}
               </h2>
-              <p class="text-muted-foreground text-xs">
+              <p class="text-muted-foreground text-sm">
                 Omni-purpose platform for professionally Built Packages
               </p>
 
-              <dl class="space-y-2.5 text-xs">
+              <dl class="space-y-2.5 text-sm">
                 <div class="space-y-0.5">
                   <dt class="text-muted-foreground">{{ t('about.meta.versionLabel') }}</dt>
                   <dd class="font-mono text-foreground tabular-nums">v{{ appVersion }}</dd>
@@ -143,11 +143,11 @@ watchEffect(() => {
 
             <!-- 维护与联络 -->
             <section class="space-y-3">
-              <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+              <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                 {{ t('about.meta.contactHeading') }}
               </h2>
 
-              <dl class="space-y-2.5 text-xs">
+              <dl class="space-y-2.5 text-sm">
                 <div class="space-y-0.5">
                   <dt class="text-muted-foreground">{{ t('about.meta.maintainerLabel') }}</dt>
                   <dd class="font-medium text-foreground">Zbx1425</dd>

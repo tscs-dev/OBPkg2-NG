@@ -87,7 +87,7 @@ const announcementCards = computed(() => [
             <header class="px-3.5 py-2.5 border-b border-border bg-muted/35 flex items-center justify-between gap-2 shrink-0">
               <div class="flex items-center gap-2 min-w-0">
                 <component :is="card.icon" class="size-3.5 text-primary shrink-0" />
-                <h2 class="text-xs font-semibold trackingdisabled-wide text-foreground truncate">
+                <h2 class="text-sm font-semibold trackingdisabled-wide text-foreground truncate">
                   {{ card.title }}
                 </h2>
               </div>
@@ -112,7 +112,7 @@ const announcementCards = computed(() => [
               </div>
             </header>
 
-            <div class="h-52 overflow-y-auto overscroll-contain p-3.5 text-xs">
+            <div class="h-52 overflow-y-auto overscroll-contain p-3.5 text-sm">
               <div v-if="card.query.isPending.value" class="space-y-2.5">
                 <Skeleton class="h-4 w-1/3 rounded-none" />
                 <Skeleton class="h-3.5 w-full rounded-none" />
@@ -165,7 +165,7 @@ const announcementCards = computed(() => [
 
               <div
                 v-else-if="card.query.data.value?.html"
-                class="prose prose-xs max-w-none wiki-prose text-xs leading-relaxed"
+                class="prose prose-sm max-w-none wiki-prose text-sm leading-relaxed"
                 v-html="card.query.data.value.html"
               />
             </div>
@@ -233,7 +233,7 @@ const announcementCards = computed(() => [
         <div class="flex flex-col gap-5">
           <!-- 常用入口 -->
           <section class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+            <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
               {{ t('home.quickLinks') }}
             </h2>
 
@@ -280,13 +280,13 @@ const announcementCards = computed(() => [
 
           <!-- 站点统计（时刻表式双列紧凑键值） -->
           <section class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+            <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
               {{ t('home.siteStats') }}
             </h2>
 
             <dl class="space-y-2 text-sm tabular-nums">
               <div class="flex items-baseline justify-between gap-2">
-                <dt class="text-muted-foreground text-xs">{{ t('home.statPackages') }}</dt>
+                <dt class="text-muted-foreground">{{ t('home.statPackages') }}</dt>
                 <dd class="font-semibold text-foreground">
                   <Skeleton v-if="statsQuery.isPending.value" class="h-4 w-12 rounded-none" />
                   <template v-else-if="statsQuery.data.value">
@@ -296,7 +296,7 @@ const announcementCards = computed(() => [
                 </dd>
               </div>
               <div class="flex items-baseline justify-between gap-2">
-                <dt class="text-muted-foreground text-xs">{{ t('home.statDownloads') }}</dt>
+                <dt class="text-muted-foreground">{{ t('home.statDownloads') }}</dt>
                 <dd class="font-semibold text-foreground">
                   <Skeleton v-if="statsQuery.isPending.value" class="h-4 w-16 rounded-none" />
                   <template v-else-if="statsQuery.data.value">
@@ -306,7 +306,7 @@ const announcementCards = computed(() => [
                 </dd>
               </div>
               <div class="flex items-baseline justify-between gap-2">
-                <dt class="text-muted-foreground text-xs">{{ t('home.statUsers') }}</dt>
+                <dt class="text-muted-foreground">{{ t('home.statUsers') }}</dt>
                 <dd class="font-semibold text-foreground">
                   <Skeleton v-if="statsQuery.isPending.value" class="h-4 w-16 rounded-none" />
                   <template v-else-if="statsQuery.data.value">
@@ -316,7 +316,7 @@ const announcementCards = computed(() => [
                 </dd>
               </div>
               <div class="flex items-baseline justify-between gap-2">
-                <dt class="text-muted-foreground text-xs">{{ t('home.statRunningDays') }}</dt>
+                <dt class="text-muted-foreground">{{ t('home.statRunningDays') }}</dt>
                 <dd class="font-semibold text-foreground">
                   <Skeleton v-if="statsQuery.isPending.value" class="h-4 w-14 rounded-none" />
                   <template v-else-if="statsQuery.data.value">

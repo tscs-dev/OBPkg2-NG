@@ -66,7 +66,7 @@ async function handleSave() {
       </div>
 
       <template #footer>
-        <div class="min-h-5 flex items-center text-xs">
+        <div class="min-h-5 flex items-center text-sm">
           <span
             v-if="saveError"
             role="alert"

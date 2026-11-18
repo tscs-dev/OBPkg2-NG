@@ -181,7 +181,7 @@ watchEffect(() => {
       <template #sidebar>
         <div class="flex flex-col gap-5">
           <section class="space-y-2">
-            <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {{ t('adminFiles.filters.statusLabel') }}
             </div>
             <div role="radiogroup" class="space-y-0.5">
@@ -216,7 +216,7 @@ watchEffect(() => {
           <Separator />
 
           <section class="space-y-2">
-            <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               {{ t('packages.platformLabel') }}
             </div>
             <div role="radiogroup" class="space-y-0.5">
@@ -260,7 +260,7 @@ watchEffect(() => {
       <!-- 主栏大表格 -->
       <div>
         <div class="flex items-center justify-between gap-3 pb-3 border-b border-border">
-          <div class="flex items-center gap-2 min-w-0 text-xs text-muted-foreground tabular-nums">
+          <div class="flex items-center gap-2 min-w-0 text-sm text-muted-foreground tabular-nums">
             <template v-if="filesQuery.isPending.value">
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
@@ -286,7 +286,7 @@ watchEffect(() => {
           <div class="flex items-center gap-2 lg:hidden">
             <Sheet v-model:open="mobileSheetOpen">
               <SheetTrigger as-child>
-                <Button variant="outline" size="sm" class="rounded-none h-8 text-xs cursor-pointer">
+                <Button variant="outline" size="sm" class="rounded-none h-8 cursor-pointer">
                   <SlidersHorizontal class="size-3.5" />
                   <span>{{ t('packages.filterButton') }}</span>
                 </Button>
@@ -299,7 +299,7 @@ watchEffect(() => {
                 </SheetHeader>
                 <div class="pt-4 space-y-5">
                   <section class="space-y-2">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                       {{ t('adminFiles.filters.statusLabel') }}
                     </div>
                     <div class="space-y-0.5">
@@ -317,7 +317,7 @@ watchEffect(() => {
                   </section>
                   <Separator />
                   <section class="space-y-2">
-                    <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                       {{ t('packages.platformLabel') }}
                     </div>
                     <div class="space-y-0.5">
@@ -350,7 +350,7 @@ watchEffect(() => {
           class="my-6 border border-border bg-muted/30 p-6 space-y-3"
         >
           <p class="text-sm font-medium text-foreground">{{ t('adminFiles.errorTitle') }}</p>
-          <p class="text-xs text-muted-foreground">
+          <p class="text-sm text-muted-foreground">
             {{ filesQuery.error.value?.message || t('errors.network') }}
           </p>
           <Button
@@ -380,7 +380,7 @@ watchEffect(() => {
         >
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr class="bg-muted/45 border-b border-border text-xs font-semibold text-muted-foreground">
+              <tr class="bg-muted/45 border-b border-border text-xs sm:text-sm font-semibold text-muted-foreground">
                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap">#ID</th>
                 <th scope="col" class="py-2.5 px-3 whitespace-nowrap">
                   {{ t('adminFiles.headers.package') }}
@@ -403,7 +403,7 @@ watchEffect(() => {
                 :key="file.ID"
                 class="hover:bg-muted/35 transition-colors"
               >
-                <td class="py-2.5 px-3 font-mono text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+                <td class="py-2.5 px-3 font-mono text-xs sm:text-sm text-muted-foreground tabular-nums whitespace-nowrap">
                   #{{ file.ID }}
                 </td>
 
@@ -428,7 +428,7 @@ watchEffect(() => {
                   </div>
                 </td>
 
-                <td class="py-2.5 px-3 text-xs max-w-[200px]">
+                <td class="py-2.5 px-3 text-xs sm:text-sm max-w-[200px]">
                   <span
                     v-if="file.NeedValidation && !file.Validated && file.RejectReason"
                     class="inline-flex items-start gap-1 text-destructive leading-snug"
@@ -507,7 +507,7 @@ watchEffect(() => {
         <nav
           v-if="totalPages > 1"
           aria-label="Pagination"
-          class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-xs tabular-nums"
+          class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
         >
           <span class="text-muted-foreground">
             {{ t('packages.paginationPage', { page, totalPages }) }}
@@ -516,7 +516,7 @@ watchEffect(() => {
             <Button
               variant="outline"
               size="sm"
-              class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+              class="rounded-none h-8 px-2.5 cursor-pointer"
               :disabled="page <= 1"
               @click="updateFilters({ page: page - 1 })"
             >
@@ -526,7 +526,7 @@ watchEffect(() => {
             <Button
               variant="outline"
               size="sm"
-              class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+              class="rounded-none h-8 px-2.5 cursor-pointer"
               :disabled="page >= totalPages"
               @click="updateFilters({ page: page + 1 })"
             >

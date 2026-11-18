@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
       class="p-0 flex flex-col gap-0 rounded-none overflow-hidden sm:w-[calc(100vw-4rem)] sm:max-w-5xl sm:h-[min(78vh,720px)] max-sm:inset-0 max-sm:w-screen max-sm:h-svh max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:border-0"
     >
       <DialogHeader class="px-4 py-2.5 bg-muted/40 border-b border-border pr-10 shrink-0 text-left">
-        <DialogTitle class="text-xs font-semibold trackingdisabled-wide flex items-center gap-2">
+        <DialogTitle class="text-sm font-semibold trackingdisabled-wide flex items-center gap-2">
           <FolderOpen class="size-3.5 text-primary shrink-0" />
           <span>{{ t('packageEdit.versions.pickerTitle') }}</span>
         </DialogTitle>
@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
       <div
         v-if="errorNotice"
         role="alert"
-        class="px-4 py-2 bg-destructive/10 border-b border-destructive/25 text-xs text-destructive shrink-0"
+        class="px-4 py-2 bg-destructive/10 border-b border-destructive/25 text-sm text-destructive shrink-0"
       >
         {{ errorNotice }}
       </div>
@@ -130,7 +130,7 @@ onBeforeUnmount(() => {
       <div class="relative flex-1 min-h-0 bg-muted/15">
         <div
           v-if="isLoading"
-          class="absolute inset-0 flex items-center justify-center gap-2 text-xs text-muted-foreground bg-background/80 z-10 pointer-events-none"
+          class="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-background/80 z-10 pointer-events-none"
         >
           <Loader2 class="size-4 animate-spin text-primary" />
           <span>{{ t('common.loading') }}</span>

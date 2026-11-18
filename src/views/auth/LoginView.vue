@@ -102,7 +102,7 @@ watchEffect(() => {
     <div
       v-if="isExpiredRedirect"
       role="status"
-      class="mb-4 border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-xs text-amber-950 dark:text-amber-200 leading-relaxed"
+      class="mb-4 border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-sm text-amber-950 dark:text-amber-200 leading-relaxed"
     >
       <AlertCircle class="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
       <span>{{ t('auth.loginExpiredHint') }}</span>
@@ -116,7 +116,7 @@ watchEffect(() => {
         <div
           v-if="serverError"
           role="alert"
-          class="px-4 py-2.5 bg-destructive/8 text-destructive text-xs flex items-start gap-2 leading-relaxed"
+          class="px-4 py-2.5 bg-destructive/8 text-destructive text-sm flex items-start gap-2 leading-relaxed"
         >
           <AlertCircle class="size-4 shrink-0 mt-0.5" />
           <span>{{ serverError }}</span>
@@ -183,7 +183,7 @@ watchEffect(() => {
       </FormPanel>
     </form>
 
-    <p class="mt-4 text-center text-xs text-muted-foreground">
+    <p class="mt-4 text-center text-sm text-muted-foreground">
       <span>{{ t('auth.noAccountPrompt') }}</span>
       <router-link
         to="/auth/register"

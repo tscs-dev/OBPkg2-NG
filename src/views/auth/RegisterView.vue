@@ -72,7 +72,7 @@ watchEffect(() => {
       v-if="sentExpiry"
       :title="t('auth.registerSuccessTitle')"
     >
-      <div class="p-4 space-y-3 text-xs leading-relaxed">
+      <div class="p-4 space-y-3 text-sm leading-relaxed">
         <div class="flex items-start gap-2.5 text-emerald-700 dark:text-emerald-400">
           <CheckCircle2 class="size-4 shrink-0 mt-0.5" />
           <p class="font-medium text-foreground">
@@ -108,7 +108,7 @@ watchEffect(() => {
         <div
           v-if="serverError"
           role="alert"
-          class="px-4 py-2.5 bg-destructive/8 text-destructive text-xs space-y-1.5 leading-relaxed"
+          class="px-4 py-2.5 bg-destructive/8 text-destructive text-sm space-y-1.5 leading-relaxed"
         >
           <div class="flex items-start gap-2">
             <AlertCircle class="size-4 shrink-0 mt-0.5" />
@@ -157,7 +157,7 @@ watchEffect(() => {
       </FormPanel>
     </form>
 
-    <p v-if="!sentExpiry" class="mt-4 text-center text-xs text-muted-foreground">
+    <p v-if="!sentExpiry" class="mt-4 text-center text-sm text-muted-foreground">
       <span>{{ t('auth.hasAccountPrompt') }}</span>
       <router-link
         to="/auth/login"

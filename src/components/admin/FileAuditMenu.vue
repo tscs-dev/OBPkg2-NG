@@ -159,7 +159,7 @@ defineExpose({
 
     <DropdownMenuContent align="end" class="w-48 rounded-none">
       <DropdownMenuItem
-        class="rounded-none text-xs cursor-pointer"
+        class="rounded-none cursor-pointer"
         @click="openValidateConfirm"
       >
         <X v-if="file.Validated" class="size-3.5" />
@@ -174,7 +174,7 @@ defineExpose({
       </DropdownMenuItem>
 
       <DropdownMenuItem
-        class="rounded-none text-xs cursor-pointer"
+        class="rounded-none cursor-pointer"
         @click="openRejectDialog"
       >
         <MessageSquareWarning class="size-3.5" />
@@ -184,7 +184,7 @@ defineExpose({
       <DropdownMenuItem
         v-if="context === 'version-form' && file.FetchURL"
         as-child
-        class="rounded-none text-xs cursor-pointer"
+        class="rounded-none cursor-pointer"
       >
         <a :href="file.FetchURL" target="_blank" rel="noopener noreferrer">
           <Download class="size-3.5" />
@@ -195,14 +195,14 @@ defineExpose({
       <template v-if="context === 'admin-table'">
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+        <DropdownMenuItem as-child class="rounded-none cursor-pointer">
           <router-link :to="`/packages/${file.PackageID}/edit/versions/${file.ID}`">
             <Pencil class="size-3.5" />
             <span>{{ t('adminFiles.actions.editParams') }}</span>
           </router-link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+        <DropdownMenuItem as-child class="rounded-none cursor-pointer">
           <router-link :to="`/packages/${file.PackageID}`">
             <ExternalLink class="size-3.5" />
             <span>{{ t('adminFiles.actions.viewPackage') }}</span>
@@ -213,7 +213,7 @@ defineExpose({
       <DropdownMenuSeparator />
 
       <DropdownMenuItem
-        class="rounded-none text-xs text-destructive focus:text-destructive cursor-pointer"
+        class="rounded-none text-destructive focus:text-destructive cursor-pointer"
         @click="openDeleteDialog"
       >
         <Trash2 class="size-3.5" />
@@ -227,12 +227,12 @@ defineExpose({
     <DialogContent class="max-w-md rounded-none">
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('adminFiles.validateConfirmTitle') }}</DialogTitle>
-        <DialogDescription class="text-xs leading-relaxed">
+        <DialogDescription class="text-sm leading-relaxed">
           {{ t('adminFiles.validateConfirmDesc') }}
         </DialogDescription>
       </DialogHeader>
 
-      <p v-if="validateError" class="text-xs text-destructive" role="alert">
+      <p v-if="validateError" class="text-sm text-destructive" role="alert">
         {{ validateError }}
       </p>
 
@@ -266,7 +266,7 @@ defineExpose({
     <DialogContent class="max-w-md rounded-none">
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('adminFiles.actions.setRejectReason') }}</DialogTitle>
-        <DialogDescription class="text-xs leading-relaxed">
+        <DialogDescription class="text-sm leading-relaxed">
           {{ t('adminFiles.rejectDialogDesc') }}
         </DialogDescription>
       </DialogHeader>
@@ -278,7 +278,7 @@ defineExpose({
           class="w-full h-8 px-2.5 text-[13px] bg-background border border-input focus:border-primary focus:outline-none"
           @keydown.enter.prevent="confirmRejectReason"
         />
-        <p v-if="rejectError" class="text-xs text-destructive" role="alert">
+        <p v-if="rejectError" class="text-sm text-destructive" role="alert">
           {{ rejectError }}
         </p>
       </div>
@@ -313,12 +313,12 @@ defineExpose({
     <DialogContent class="max-w-md rounded-none">
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('packageEdit.versions.deleteConfirmTitle') }}</DialogTitle>
-        <DialogDescription class="text-xs leading-relaxed">
+        <DialogDescription class="text-sm leading-relaxed">
           {{ t('packageEdit.versions.deleteConfirmDesc', { version: file.Version }) }}
         </DialogDescription>
       </DialogHeader>
 
-      <p v-if="deleteError" class="text-xs text-destructive" role="alert">
+      <p v-if="deleteError" class="text-sm text-destructive" role="alert">
         {{ deleteError }}
       </p>
 

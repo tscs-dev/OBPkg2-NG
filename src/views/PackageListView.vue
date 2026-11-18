@@ -173,7 +173,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
       <div>
         <!-- 顶部结果摘要与移动端筛选抽屉触发器 -->
         <div class="flex items-center justify-between gap-3 pb-3 border-b border-border">
-          <div class="flex items-center gap-2 min-w-0 text-xs text-muted-foreground tabular-nums">
+          <div class="flex items-center gap-2 min-w-0 text-sm text-muted-foreground tabular-nums">
             <template v-if="packagesQuery.isPending.value">
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
@@ -201,7 +201,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
               v-if="authStore.isLoggedIn && authStore.privilege >= 0"
               as-child
               size="sm"
-              class="rounded-none h-8 text-xs"
+              class="rounded-none h-8"
             >
               <router-link to="/packages/new">
                 <Plus class="size-3.5" />
@@ -212,7 +212,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             <div class="lg:hidden">
               <Sheet v-model:open="mobileSheetOpen">
                 <SheetTrigger as-child>
-                  <Button variant="outline" size="sm" class="rounded-none h-8 text-xs cursor-pointer">
+                  <Button variant="outline" size="sm" class="rounded-none h-8 cursor-pointer">
                     <SlidersHorizontal class="size-3.5" />
                     <span>{{ t('packages.filterButton') }}</span>
                     <span
@@ -247,7 +247,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
         <div
           v-if="platform === 'all'"
           role="status"
-          class="mt-3 mb-1 border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 leading-relaxed"
+          class="mt-3 mb-1 border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2.5 text-sm text-amber-900 dark:text-amber-200 leading-relaxed"
         >
           <AlertTriangle class="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <span>{{ t('packages.allEntriesNotice') }}</span>
@@ -276,7 +276,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
           <p class="text-sm font-medium text-foreground">
             {{ t('packages.errorTitle') }}
           </p>
-          <p class="text-xs text-muted-foreground">
+          <p class="text-sm text-muted-foreground">
             {{ packagesQuery.error.value?.message || t('errors.network') }}
           </p>
           <Button
@@ -298,7 +298,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
           <p class="text-sm font-medium text-foreground">
             {{ t('packages.emptyTitle') }}
           </p>
-          <p class="text-xs text-muted-foreground">
+          <p class="text-sm text-muted-foreground">
             {{ t('packages.emptyDesc') }}
           </p>
           <Button
@@ -331,7 +331,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
           aria-label="Pagination"
           class="mt-6 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3"
         >
-          <span class="text-xs text-muted-foreground tabular-nums">
+          <span class="text-sm text-muted-foreground tabular-nums">
             {{ t('packages.paginationPage', { page, totalPages }) }}
           </span>
 
@@ -339,7 +339,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             <Button
               variant="outline"
               size="sm"
-              class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+              class="rounded-none h-8 px-2.5 cursor-pointer"
               :disabled="page <= 1"
               @click="goToPage(page - 1)"
             >
@@ -350,7 +350,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             <template v-for="(token, idx) in paginationTokens" :key="`${idx}-${token}`">
               <span
                 v-if="token === 'ellipsis'"
-                class="px-2 text-xs text-muted-foreground select-none"
+                class="px-2 text-sm text-muted-foreground select-none"
               >
                 …
               </span>
@@ -358,7 +358,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
                 v-else
                 :variant="token === page ? 'default' : 'outline'"
                 size="sm"
-                class="rounded-none h-8 min-w-8 px-2 text-xs cursor-pointer"
+                class="rounded-none h-8 min-w-8 px-2 cursor-pointer"
                 :aria-current="token === page ? 'page' : undefined"
                 @click="goToPage(token)"
               >
@@ -369,7 +369,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             <Button
               variant="outline"
               size="sm"
-              class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+              class="rounded-none h-8 px-2.5 cursor-pointer"
               :disabled="page >= totalPages"
               @click="goToPage(page + 1)"
             >

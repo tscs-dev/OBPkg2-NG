@@ -256,7 +256,7 @@ function handleAuditDeleted() {
     <div class="flex flex-wrap items-center justify-between gap-3">
       <router-link
         :to="`/packages/${packageId}/edit/versions`"
-        class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft class="size-3.5" />
         <span>{{ t('packageEdit.versions.backToVersions') }}</span>
@@ -291,7 +291,7 @@ function handleAuditDeleted() {
       <div
         v-if="existingFile?.RejectReason"
         role="alert"
-        class="border border-destructive/35 bg-destructive/8 px-3.5 py-2.5 flex items-start gap-2 text-xs text-destructive leading-relaxed"
+        class="border border-destructive/35 bg-destructive/8 px-3.5 py-2.5 flex items-start gap-2 text-sm text-destructive leading-relaxed"
       >
         <AlertCircle class="size-4 shrink-0 mt-0.5" />
         <div>
@@ -303,7 +303,7 @@ function handleAuditDeleted() {
       <!-- 编辑已验证文件提示 -->
       <div
         v-if="existingFile?.NeedValidation && existingFile?.Validated"
-        class="border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-xs text-amber-950 dark:text-amber-200 leading-relaxed"
+        class="border border-amber-500/35 bg-amber-500/8 px-3.5 py-2.5 flex items-start gap-2 text-sm text-amber-950 dark:text-amber-200 leading-relaxed"
       >
         <AlertTriangle class="size-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <span>{{ t('packageEdit.versions.validatedEditHint') }}</span>
@@ -318,7 +318,7 @@ function handleAuditDeleted() {
       >
         <template v-if="isModerator" #header-extra>
           <div class="flex items-center gap-2">
-            <label class="inline-flex items-center gap-2 text-xs text-foreground/85 cursor-pointer select-none">
+            <label class="inline-flex items-center gap-2 text-sm text-foreground/85 cursor-pointer select-none">
               <span>{{ t('packageEdit.versions.manualOverrideToggle') }}</span>
               <Switch
                 :model-value="manualOverride"
@@ -489,7 +489,7 @@ function handleAuditDeleted() {
         </template>
 
         <template #footer>
-          <div class="min-h-5 flex items-center text-xs">
+          <div class="min-h-5 flex items-center text-sm">
             <span
               v-if="saveError"
               role="alert"
@@ -541,7 +541,7 @@ function handleAuditDeleted() {
       <DialogContent class="max-w-md rounded-none">
         <DialogHeader>
           <DialogTitle class="text-base">{{ t('packageEdit.versions.revalidateConfirmTitle') }}</DialogTitle>
-          <DialogDescription class="text-xs leading-relaxed">
+          <DialogDescription class="text-sm leading-relaxed">
             {{ t('packageEdit.versions.validatedEditHint') }}
           </DialogDescription>
         </DialogHeader>

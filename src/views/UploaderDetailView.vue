@@ -382,7 +382,7 @@ watchEffect(() => {
                 </span>
               </div>
 
-              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground tabular-nums">
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted-foreground tabular-nums">
                 <span v-if="secondaryName" class="text-sm text-muted-foreground">
                   {{ secondaryName }}
                 </span>
@@ -453,7 +453,7 @@ watchEffect(() => {
                       v-model="packageFilter"
                       type="text"
                       :placeholder="t('uploader.searchPlaceholder')"
-                      class="w-full h-8 pl-8 pr-7 text-xs bg-background border border-input focus:border-primary focus:outline-none"
+                      class="w-full h-8 pl-8 pr-7 text-sm bg-background border border-input focus:border-primary focus:outline-none"
                     />
                     <button
                       v-if="packageFilter"
@@ -464,7 +464,7 @@ watchEffect(() => {
                       <X class="size-3" />
                     </button>
                   </div>
-                  <span class="text-xs text-muted-foreground tabular-nums shrink-0">
+                  <span class="text-sm text-muted-foreground tabular-nums shrink-0">
                     {{ t('packages.totalCount', { count: filteredPackages.length }) }}
                   </span>
                 </div>
@@ -494,7 +494,7 @@ watchEffect(() => {
                 <!-- 本地分页 -->
                 <nav
                   v-if="totalPages > 1"
-                  class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-xs tabular-nums"
+                  class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
                 >
                   <span class="text-muted-foreground">
                     {{ t('packages.paginationPage', { page: currentPage, totalPages }) }}
@@ -503,7 +503,7 @@ watchEffect(() => {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+                      class="rounded-none h-8 px-2.5 cursor-pointer"
                       :disabled="currentPage <= 1"
                       @click="currentPage -= 1"
                     >
@@ -513,7 +513,7 @@ watchEffect(() => {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+                      class="rounded-none h-8 px-2.5 cursor-pointer"
                       :disabled="currentPage >= totalPages"
                       @click="currentPage += 1"
                     >
@@ -528,7 +528,7 @@ watchEffect(() => {
             <!-- 情形 2：合流模式（无介绍 或 桌面端短介绍 <= 48vh） -->
             <div v-else class="flex flex-col gap-6">
               <section v-if="sanitizedBio" class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.bioHeading') }}
                 </h2>
                 <div
@@ -555,7 +555,7 @@ watchEffect(() => {
                       v-model="packageFilter"
                       type="text"
                       :placeholder="t('uploader.searchPlaceholder')"
-                      class="w-full h-8 pl-8 pr-7 text-xs bg-background border border-input focus:border-primary focus:outline-none"
+                      class="w-full h-8 pl-8 pr-7 text-sm bg-background border border-input focus:border-primary focus:outline-none"
                     />
                     <button
                       v-if="packageFilter"
@@ -592,7 +592,7 @@ watchEffect(() => {
 
                 <nav
                   v-if="totalPages > 1"
-                  class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-xs tabular-nums"
+                  class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
                 >
                   <span class="text-muted-foreground">
                     {{ t('packages.paginationPage', { page: currentPage, totalPages }) }}
@@ -601,7 +601,7 @@ watchEffect(() => {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+                      class="rounded-none h-8 px-2.5 cursor-pointer"
                       :disabled="currentPage <= 1"
                       @click="currentPage -= 1"
                     >
@@ -611,7 +611,7 @@ watchEffect(() => {
                     <Button
                       variant="outline"
                       size="sm"
-                      class="rounded-none h-8 px-2.5 text-xs cursor-pointer"
+                      class="rounded-none h-8 px-2.5 cursor-pointer"
                       :disabled="currentPage >= totalPages"
                       @click="currentPage += 1"
                     >
@@ -646,11 +646,11 @@ watchEffect(() => {
               </section>
 
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.meta.accountHeading') }}
                 </h2>
 
-                <dl class="space-y-2.5 text-xs">
+                <dl class="space-y-2.5 text-sm">
                   <div class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('uploader.meta.userId') }}</dt>
                     <dd class="font-mono text-foreground tabular-nums">#{{ uploader.ID }}</dd>
@@ -705,11 +705,11 @@ watchEffect(() => {
               <Separator />
 
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.meta.statsHeading') }}
                 </h2>
 
-                <dl class="space-y-2 text-xs tabular-nums">
+                <dl class="space-y-2 text-sm tabular-nums">
                   <div class="flex items-baseline justify-between gap-2">
                     <dt class="text-muted-foreground">{{ t('uploader.meta.packageCount') }}</dt>
                     <dd class="font-semibold text-foreground">{{ enrichedPackages.length }}</dd>

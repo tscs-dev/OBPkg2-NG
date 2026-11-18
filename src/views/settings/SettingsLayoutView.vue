@@ -145,7 +145,7 @@ watchEffect(() => {
             <Separator />
             <router-link
               :to="`/uploaders/${targetUserId}`"
-              class="px-2.5 py-1.5 inline-flex items-center justify-between gap-2 text-xs font-medium text-primary hover:bg-muted/60 transition-colors"
+              class="px-2.5 py-1.5 inline-flex items-center justify-between gap-2 text-sm font-medium text-primary hover:bg-muted/60 transition-colors"
             >
               <span>{{ t('settings.viewPublicProfile') }}</span>
               <ArrowRight class="size-3.5 shrink-0" />

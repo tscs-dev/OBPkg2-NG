@@ -308,7 +308,7 @@ watchEffect(() => {
                 </p>
               </div>
 
-              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-muted-foreground tabular-nums">
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm text-muted-foreground tabular-nums">
                 <PlatformBadge :platforms="pkg.Platforms" variant="label" />
                 <span aria-hidden="true">·</span>
                 <template v-if="isRepost && authorDisplayName">
@@ -424,7 +424,7 @@ watchEffect(() => {
                   <p class="text-sm font-medium text-foreground">
                     {{ t('detail.commentsPlaceholderTitle') }}
                   </p>
-                  <p class="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  <p class="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
                     {{ t('detail.commentsPlaceholderDesc') }}
                   </p>
                 </div>
@@ -453,20 +453,20 @@ watchEffect(() => {
 
               <!-- 创作者与上传者 -->
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('detail.meta.peopleHeading') }}
                 </h2>
 
                 <!-- 转载场景：先展示原作者，再展示上传者 -->
                 <div v-if="isRepost && pkg.Author" class="flex flex-col gap-3">
                   <div class="space-y-1">
-                    <div class="text-xs text-muted-foreground">
+                    <div class="text-sm text-muted-foreground">
                       {{ t('detail.meta.originalAuthor') }}
                     </div>
                     <div class="text-sm font-medium text-foreground break-words">
                       {{ authorDisplayName || '—' }}
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
+                    <div class="flex flex-wrap items-center gap-3 pt-0.5 text-sm">
                       <a
                         v-if="pkg.Author.Email"
                         :href="`mailto:${pkg.Author.Email}`"
@@ -491,7 +491,7 @@ watchEffect(() => {
                   <template v-if="pkg.Uploader">
                     <Separator />
                     <div class="space-y-1">
-                      <div class="text-xs text-muted-foreground">
+                      <div class="text-sm text-muted-foreground">
                         {{ t('detail.meta.uploader') }}
                       </div>
                       <router-link
@@ -500,7 +500,7 @@ watchEffect(() => {
                       >
                         {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
                       </router-link>
-                      <div v-if="pkg.Uploader.Email" class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
+                      <div v-if="pkg.Uploader.Email" class="flex flex-wrap items-center gap-3 pt-0.5 text-sm">
                         <a
                           :href="`mailto:${pkg.Uploader.Email}`"
                           class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
@@ -515,7 +515,7 @@ watchEffect(() => {
 
                 <!-- 原创场景：只展示上传者并标记为作者 -->
                 <div v-else-if="pkg.Uploader" class="space-y-1">
-                  <div class="text-xs text-muted-foreground">
+                  <div class="text-sm text-muted-foreground">
                     {{ t('detail.meta.author') }}
                   </div>
                   <router-link
@@ -524,7 +524,7 @@ watchEffect(() => {
                   >
                     {{ uploaderDisplayName || `#${pkg.Uploader.ID}` }}
                   </router-link>
-                  <div class="flex flex-wrap items-center gap-3 pt-0.5 text-xs">
+                  <div class="flex flex-wrap items-center gap-3 pt-0.5 text-sm">
                     <a
                       v-if="pkg.Uploader.Email"
                       :href="`mailto:${pkg.Uploader.Email}`"
@@ -551,11 +551,11 @@ watchEffect(() => {
 
               <!-- 技术元数据 -->
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('detail.meta.specsHeading') }}
                 </h2>
 
-                <dl class="space-y-3 text-xs">
+                <dl class="space-y-3 text-sm">
                   <div class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('detail.meta.packageId') }}</dt>
                     <dd class="font-mono text-foreground tabular-nums">#{{ pkg.ID }}</dd>

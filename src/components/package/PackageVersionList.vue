@@ -74,7 +74,7 @@ const sortedFiles = computed(() => {
     <div class="border border-border overflow-x-auto">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
-          <tr class="bg-muted/45 border-b border-border text-xs font-semibold text-muted-foreground">
+          <tr class="bg-muted/45 border-b border-border text-xs sm:text-sm font-semibold text-muted-foreground">
             <th scope="col" class="py-2.5 px-3.5 whitespace-nowrap">
               {{ t('detail.tableHeaders.version') }}
             </th>
@@ -116,11 +116,11 @@ const sortedFiles = computed(() => {
               <PlatformBadge :platforms="file.platforms" variant="label" />
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+            <td class="py-2.5 px-3.5 text-xs sm:text-sm text-muted-foreground tabular-nums whitespace-nowrap">
               {{ file.Size }}
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs whitespace-nowrap">
+            <td class="py-2.5 px-3.5 text-xs sm:text-sm whitespace-nowrap">
               <span
                 v-if="file.NeedValidation && !file.Validated && file.RejectReason"
                 class="inline-flex items-center gap-1.5 text-destructive"

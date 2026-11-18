@@ -200,7 +200,7 @@ function handleLogout() {
               <DropdownMenuTrigger as-child>
                 <button
                   type="button"
-                  class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium bg-black/10 text-white/90 hover:bg-black/20 hover:text-white border border-white/20 transition-colors cursor-pointer"
+                  class="h-8 px-2.5 flex items-center gap-1.5 text-sm font-medium bg-black/10 text-white/90 hover:bg-black/20 hover:text-white border border-white/20 transition-colors cursor-pointer"
                   :aria-label="t('nav.language')"
                 >
                   <Globe class="size-3.5 shrink-0" />
@@ -215,7 +215,7 @@ function handleLogout() {
                     v-for="loc in SUPPORTED_LOCALES"
                     :key="loc.code"
                     :value="loc.code"
-                    class="rounded-none text-xs cursor-pointer"
+                    class="rounded-none cursor-pointer"
                   >
                     {{ loc.label }}
                   </DropdownMenuRadioItem>
@@ -228,7 +228,7 @@ function handleLogout() {
               <DropdownMenuTrigger as-child>
                 <button
                   type="button"
-                  class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors cursor-pointer max-w-[170px]"
+                  class="h-8 px-2.5 flex items-center gap-1.5 text-sm font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors cursor-pointer max-w-[170px]"
                 >
                   <User class="size-3.5 shrink-0" />
                   <span class="truncate">{{ displayUsername }}</span>
@@ -237,7 +237,7 @@ function handleLogout() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" class="w-56 rounded-none">
                 <DropdownMenuLabel class="font-normal py-2">
-                  <div class="text-xs font-semibold text-foreground truncate">
+                  <div class="text-sm font-semibold text-foreground truncate">
                     {{ displayUsername }}
                   </div>
                   <div class="text-[11px] text-muted-foreground truncate mt-0.5">
@@ -245,19 +245,19 @@ function handleLogout() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                <DropdownMenuItem as-child class="rounded-none cursor-pointer">
                   <router-link :to="`/uploaders/${authStore.profile.ID}`">
                     <User class="size-3.5" />
                     <span>{{ t('nav.myUploaderPage') }}</span>
                   </router-link>
                 </DropdownMenuItem>
-                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                <DropdownMenuItem as-child class="rounded-none cursor-pointer">
                   <router-link to="/packages/new">
                     <Plus class="size-3.5" />
                     <span>{{ t('nav.newPackage') }}</span>
                   </router-link>
                 </DropdownMenuItem>
-                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                <DropdownMenuItem as-child class="rounded-none cursor-pointer">
                   <router-link to="/settings/profile">
                     <Settings class="size-3.5" />
                     <span>{{ t('nav.settings') }}</span>
@@ -265,7 +265,7 @@ function handleLogout() {
                 </DropdownMenuItem>
                 <template v-if="isModerator">
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                  <DropdownMenuItem as-child class="rounded-none cursor-pointer">
                     <router-link to="/admin/files" class="flex items-center justify-between gap-2">
                       <span class="inline-flex items-center gap-2">
                         <FileCheck2 class="size-3.5" />
@@ -282,7 +282,7 @@ function handleLogout() {
                 </template>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  class="rounded-none text-xs text-destructive focus:text-destructive cursor-pointer"
+                  class="rounded-none text-destructive focus:text-destructive cursor-pointer"
                   @click="handleLogout"
                 >
                   <LogOut class="size-3.5" />
@@ -295,7 +295,7 @@ function handleLogout() {
             <template v-else>
               <router-link
                 :to="loginLocation"
-                class="h-8 px-2.5 flex items-center gap-1.5 text-xs font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors"
+                class="h-8 px-2.5 flex items-center gap-1.5 text-sm font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors"
               >
                 <LogIn class="size-3.5 shrink-0" />
                 <span>{{ t('nav.login') }}</span>
@@ -309,7 +309,7 @@ function handleLogout() {
       <div class="h-9 bg-muted/35 border-b border-border shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
           <Breadcrumb class="min-w-0">
-            <BreadcrumbList class="flex-nowrap text-xs">
+            <BreadcrumbList class="flex-nowrap text-sm">
               <template v-for="(item, idx) in breadcrumbItems" :key="`${idx}-${item.label}`">
                 <BreadcrumbSeparator v-if="idx > 0" />
                 <BreadcrumbItem class="min-w-0">
@@ -328,7 +328,7 @@ function handleLogout() {
 
           <div
             v-if="rightSummary"
-            class="text-xs text-muted-foreground tabular-nums shrink-0 hidden sm:block"
+            class="text-sm text-muted-foreground tabular-nums shrink-0 hidden sm:block"
           >
             {{ rightSummary }}
           </div>
@@ -341,7 +341,7 @@ function handleLogout() {
         role="status"
         class="bg-amber-500/10 border-b border-amber-500/30 text-amber-950 dark:text-amber-200"
       >
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-sm">
           <div class="flex items-center gap-2 min-w-0">
             <AlertCircle class="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
             <span class="leading-snug">{{ t('nav.sessionExpiredBanner') }}</span>
