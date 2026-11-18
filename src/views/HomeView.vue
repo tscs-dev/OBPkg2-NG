@@ -87,7 +87,7 @@ const announcementCards = computed(() => [
             <header class="px-3.5 py-2.5 border-b border-border bg-muted/35 flex items-center justify-between gap-2 shrink-0">
               <div class="flex items-center gap-2 min-w-0">
                 <component :is="card.icon" class="size-3.5 text-primary shrink-0" />
-                <h2 class="text-xs font-semibold tracking-wide text-foreground truncate">
+                <h2 class="text-xs font-semibold trackingdisabled-wide text-foreground truncate">
                   {{ card.title }}
                 </h2>
               </div>
@@ -233,7 +233,7 @@ const announcementCards = computed(() => [
         <div class="flex flex-col gap-5">
           <!-- 常用入口 -->
           <section class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
               {{ t('home.quickLinks') }}
             </h2>
 
@@ -280,7 +280,7 @@ const announcementCards = computed(() => [
 
           <!-- 站点统计（时刻表式双列紧凑键值） -->
           <section class="space-y-3">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
               {{ t('home.siteStats') }}
             </h2>
 

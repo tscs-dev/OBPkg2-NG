@@ -124,3 +124,42 @@ export interface UpdateUploaderPayload {
   Name: String3
   Homepage: string
 }
+
+export interface UpdateUploaderDescriptionPayload {
+  Description: string
+}
+
+export interface SavePackageInfoPayload {
+  Identifier: string
+  GUID?: string
+  Name: String3
+  Author?: Author
+  Homepage: string
+  ForcePopup: boolean
+}
+
+export interface SavePackageGalleryPayload {
+  Thumbnail: string
+  ThumbnailLQ: string
+}
+
+export interface SavePackageDescriptionPayload {
+  Description: string
+}
+
+export interface SaveFilePayload {
+  PackageID: number
+  Platform: string
+  Version: string
+  Size: string
+  Service: string
+  URLParam: string
+  AuthParam: string
+  RejectReason?: string
+}
+
+export interface LskyUploadResult {
+  fullUrl: string
+  thumbUrl: string
+}
+

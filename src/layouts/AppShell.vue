@@ -5,21 +5,22 @@ import { useI18n } from 'vue-i18n'
 import {
   AlertCircle,
   ChevronDown,
+  FileCheck2,
   Globe,
   Home,
   Info,
   LogIn,
   LogOut,
   Package,
+  Plus,
   Settings,
-  Shield,
   User,
-  UserPlus,
   X,
 } from '@lucide/vue'
 import { SUPPORTED_LOCALES } from '@/i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
+import { usePendingFilesCountQuery } from '@/queries/files'
 import { useBreadcrumbState, type BreadcrumbItemData } from '@/composables/useBreadcrumb'
 import type { SupportedLocale } from '@/api/portal'
 import {
@@ -49,9 +50,9 @@ const preferences = usePreferencesStore()
 const authStore = useAuthStore()
 const { customItems, rightSummary } = useBreadcrumbState()
 
-const currentLocaleLabel = computed(
-  () => SUPPORTED_LOCALES.find((item) => item.code === preferences.locale)?.label ?? preferences.locale,
-)
+const isModerator = computed(() => authStore.isLoggedIn && authStore.privilege >= 10)
+const pendingFilesQuery = usePendingFilesCountQuery(isModerator)
+const pendingFilesCount = computed(() => pendingFilesQuery.data.value ?? 0)
 
 const displayUsername = computed(() => {
   if (!authStore.profile) return ''
@@ -100,7 +101,12 @@ const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
 function isNavActive(target: 'home' | 'packages' | 'about'): boolean {
   if (target === 'home') return route.name === 'home'
   if (target === 'about') return route.name === 'about'
-  return route.name === 'packages' || route.name === 'package-detail'
+  return (
+    route.name === 'packages' ||
+    route.name === 'package-detail' ||
+    route.name === 'package-new' ||
+    String(route.name ?? '').startsWith('package-edit-')
+  )
 }
 
 function handleLocaleChange(value: unknown) {
@@ -246,11 +252,34 @@ function handleLogout() {
                   </router-link>
                 </DropdownMenuItem>
                 <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                  <router-link to="/packages/new">
+                    <Plus class="size-3.5" />
+                    <span>{{ t('nav.newPackage') }}</span>
+                  </router-link>
+                </DropdownMenuItem>
+                <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
                   <router-link to="/settings/profile">
                     <Settings class="size-3.5" />
                     <span>{{ t('nav.settings') }}</span>
                   </router-link>
                 </DropdownMenuItem>
+                <template v-if="isModerator">
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem as-child class="rounded-none text-xs cursor-pointer">
+                    <router-link to="/admin/files" class="flex items-center justify-between gap-2">
+                      <span class="inline-flex items-center gap-2">
+                        <FileCheck2 class="size-3.5" />
+                        <span>{{ t('nav.adminFiles') }}</span>
+                      </span>
+                      <span
+                        v-if="pendingFilesCount > 0"
+                        class="px-1.5 py-0.5 text-[10px] font-semibold tabular-nums bg-primary text-primary-foreground leading-none"
+                      >
+                        {{ pendingFilesCount }}
+                      </span>
+                    </router-link>
+                  </DropdownMenuItem>
+                </template>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   class="rounded-none text-xs text-destructive focus:text-destructive cursor-pointer"

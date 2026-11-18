@@ -1,5 +1,5 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
-import { keepPreviousData, useQuery } from '@tanstack/vue-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { fetchPackageDetail, fetchPackageList, type PackageListParams } from '@/api/packages'
 
 export const packageKeys = {
@@ -30,4 +30,25 @@ export function usePackageDetailQuery(id: MaybeRefOrGetter<number | null>) {
     enabled: computed(() => resolvedId.value !== null && Number.isInteger(resolvedId.value) && resolvedId.value > 0),
     staleTime: 60_000,
   })
+}
+
+export function usePackageCacheActions() {
+  const queryClient = useQueryClient()
+
+  function invalidatePackage(id: number) {
+    return queryClient.invalidateQueries({
+      queryKey: packageKeys.detail(id),
+    })
+  }
+
+  function invalidatePackageLists() {
+    return queryClient.invalidateQueries({
+      queryKey: packageKeys.lists(),
+    })
+  }
+
+  return {
+    invalidatePackage,
+    invalidatePackageLists,
+  }
 }

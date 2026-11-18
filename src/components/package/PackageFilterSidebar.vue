@@ -76,7 +76,7 @@ const isDirty = computed(
     <section class="space-y-2">
       <label
         for="package-keyword-input"
-        class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        class="block text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground"
       >
         {{ t('packages.searchLabel') }}
       </label>
@@ -106,7 +106,7 @@ const isDirty = computed(
 
     <!-- 平台竖排单选 -->
     <section class="space-y-2">
-      <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
         {{ t('packages.platformLabel') }}
       </div>
       <div role="radiogroup" :aria-label="t('packages.platformLabel')" class="space-y-0.5">
@@ -147,7 +147,7 @@ const isDirty = computed(
 
     <!-- 显示设置 -->
     <section class="space-y-2.5">
-      <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
         {{ t('packages.displayOptions') }}
       </div>
       <label class="flex items-center justify-between gap-3 cursor-pointer select-none">

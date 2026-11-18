@@ -143,7 +143,7 @@ watchEffect(() => {
 
             <!-- 维护与联络 -->
             <section class="space-y-3">
-              <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                 {{ t('about.meta.contactHeading') }}
               </h2>
 

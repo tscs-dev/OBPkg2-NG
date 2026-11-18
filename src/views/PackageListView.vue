@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Plus,
   RefreshCw,
   SlidersHorizontal,
 } from '@lucide/vue'
@@ -15,6 +16,7 @@ import PackageFilterSidebar from '@/components/package/PackageFilterSidebar.vue'
 import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
 import { usePackagesQuery } from '@/queries/packages'
 import type { PlatformFilter } from '@/api/packages'
+import { useAuthStore } from '@/stores/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,6 +33,7 @@ const PAGE_SIZE = 20
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const authStore = useAuthStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
 
@@ -193,36 +196,50 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             />
           </div>
 
-          <div class="flex items-center gap-2 lg:hidden">
-            <Sheet v-model:open="mobileSheetOpen">
-              <SheetTrigger as-child>
-                <Button variant="outline" size="sm" class="rounded-none h-8 text-xs cursor-pointer">
-                  <SlidersHorizontal class="size-3.5" />
-                  <span>{{ t('packages.filterButton') }}</span>
-                  <span
-                    v-if="hasActiveCustomFilter"
-                    class="size-1.5 rounded-full bg-primary"
-                    aria-hidden="true"
-                  />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" class="w-72 sm:max-w-xs p-5">
-                <SheetHeader class="p-0 pb-4 border-b border-border">
-                  <SheetTitle class="text-sm font-semibold">
-                    {{ t('packages.filterTitle') }}
-                  </SheetTitle>
-                </SheetHeader>
-                <div class="pt-4">
-                  <PackageFilterSidebar
-                    :platform="platform"
-                    :keyword="keyword"
-                    @update:platform="handlePlatformChange"
-                    @update:keyword="handleKeywordChange"
-                    @reset="handleReset"
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
+          <div class="flex items-center gap-2">
+            <Button
+              v-if="authStore.isLoggedIn && authStore.privilege >= 0"
+              as-child
+              size="sm"
+              class="rounded-none h-8 text-xs"
+            >
+              <router-link to="/packages/new">
+                <Plus class="size-3.5" />
+                <span>{{ t('nav.newPackage') }}</span>
+              </router-link>
+            </Button>
+
+            <div class="lg:hidden">
+              <Sheet v-model:open="mobileSheetOpen">
+                <SheetTrigger as-child>
+                  <Button variant="outline" size="sm" class="rounded-none h-8 text-xs cursor-pointer">
+                    <SlidersHorizontal class="size-3.5" />
+                    <span>{{ t('packages.filterButton') }}</span>
+                    <span
+                      v-if="hasActiveCustomFilter"
+                      class="size-1.5 rounded-full bg-primary"
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" class="w-72 sm:max-w-xs p-5">
+                  <SheetHeader class="p-0 pb-4 border-b border-border">
+                    <SheetTitle class="text-sm font-semibold">
+                      {{ t('packages.filterTitle') }}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div class="pt-4">
+                    <PackageFilterSidebar
+                      :platform="platform"
+                      :keyword="keyword"
+                      @update:platform="handlePlatformChange"
+                      @update:keyword="handleKeywordChange"
+                      @reset="handleReset"
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
 

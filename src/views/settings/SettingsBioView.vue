@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, ChevronRight, FileEdit } from '@lucide/vue'
+import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
+import RichTextEditor from '@/components/editor/RichTextEditor.vue'
 import { useAuthStore } from '@/stores/auth'
-import { useUploaderDetailQuery } from '@/queries/uploaders'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { useUploaderCacheActions, useUploaderDetailQuery } from '@/queries/uploaders'
+import { updateUploaderProfile } from '@/api/uploaders'
+import { formatApiErrorMessage } from '@/api/auth'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const route = useRoute()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
+const { invalidateUploader } = useUploaderCacheActions()
 
 const targetUserId = computed<number | null>(() => {
   const rawUid = route.query.uid
@@ -25,50 +29,108 @@ const targetUserId = computed<number | null>(() => {
 })
 
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
-const sanitizedBio = computed(() =>
-  sanitizePackageHtml(uploaderQuery.data.value?.Description),
+
+const bioHtml = ref('')
+const isSaving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
+
+watch(
+  () => uploaderQuery.data.value,
+  (data) => {
+    if (!data) return
+    bioHtml.value = data.Description ?? ''
+    saveError.value = ''
+    saveSuccess.value = false
+  },
+  { immediate: true },
 )
 
-const showPreview = ref(false)
+async function handleSave() {
+  if (!targetUserId.value || isSaving.value) return
+  isSaving.value = true
+  saveError.value = ''
+  saveSuccess.value = false
+
+  try {
+    await updateUploaderProfile(targetUserId.value, {
+      Description: bioHtml.value,
+    })
+    await invalidateUploader(targetUserId.value)
+    saveSuccess.value = true
+  } catch (err) {
+    saveError.value = formatApiErrorMessage(err, t, te)
+  } finally {
+    isSaving.value = false
+  }
+}
 </script>
 
 <template>
-  <FormPanel :title="t('settings.bio.panelTitle')">
-    <div class="p-6 space-y-4">
-      <div class="flex items-start gap-3">
-        <FileEdit class="size-5 text-muted-foreground shrink-0 mt-0.5" />
-        <div class="space-y-1.5">
-          <h3 class="text-sm font-semibold text-foreground">
-            {{ t('settings.bio.placeholderTitle') }}
-          </h3>
-        </div>
+  <div v-if="uploaderQuery.isPending.value">
+    <FormPanel :title="t('settings.bio.panelTitle')">
+      <div class="p-4 space-y-3">
+        <Skeleton class="h-9 w-full rounded-none" />
+        <Skeleton class="h-64 w-full rounded-none" />
+      </div>
+    </FormPanel>
+  </div>
+
+  <div
+    v-else-if="uploaderQuery.isError.value"
+    class="border border-border bg-muted/30 p-5 space-y-3"
+  >
+    <p class="text-sm font-medium text-foreground">{{ t('uploader.notFoundTitle') }}</p>
+    <p class="text-xs text-muted-foreground">
+      {{ uploaderQuery.error.value?.message || t('errors.network') }}
+    </p>
+    <Button
+      variant="outline"
+      size="sm"
+      class="rounded-none cursor-pointer"
+      @click="() => uploaderQuery.refetch()"
+    >
+      {{ t('common.retry') }}
+    </Button>
+  </div>
+
+  <form v-else-if="uploaderQuery.data.value" class="space-y-4" @submit.prevent="handleSave">
+    <FormPanel :title="t('settings.bio.panelTitle')">
+      <div class="p-3">
+        <RichTextEditor v-model="bioHtml" :disabled="isSaving" />
       </div>
 
-      <div v-if="uploaderQuery.data.value" class="pt-2">
-        <template v-if="sanitizedBio">
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            class="rounded-none cursor-pointer"
-            @click="showPreview = !showPreview"
+      <template #footer>
+        <div class="min-h-5 flex items-center text-xs">
+          <span
+            v-if="saveError"
+            role="alert"
+            class="inline-flex items-center gap-1.5 text-destructive"
           >
-            <ChevronDown v-if="showPreview" class="size-3.5" />
-            <ChevronRight v-else class="size-3.5" />
-            <span>{{ t('settings.bio.currentPreviewToggle') }}</span>
-          </Button>
+            <AlertCircle class="size-3.5 shrink-0" />
+            <span>{{ saveError }}</span>
+          </span>
+          <span
+            v-else-if="saveSuccess"
+            role="status"
+            class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium"
+          >
+            <CheckCircle2 class="size-3.5 shrink-0" />
+            <span>{{ t('common.saved') }}</span>
+          </span>
+        </div>
 
-          <div
-            v-if="showPreview"
-            class="mt-3 border border-border bg-muted/20 p-4 prose prose-sm max-w-none package-prose"
-            v-html="sanitizedBio"
-          />
-        </template>
-
-        <p v-else class="text-xs text-muted-foreground">
-          {{ t('settings.bio.emptySavedBio') }}
-        </p>
-      </div>
-    </div>
-  </FormPanel>
+        <Button
+          type="submit"
+          size="sm"
+          class="rounded-none cursor-pointer"
+          :disabled="isSaving"
+        >
+          <Loader2 v-if="isSaving" class="size-3.5 animate-spin" />
+          <Save v-else class="size-3.5" />
+          <span>{{ isSaving ? t('common.saving') : t('common.save') }}</span>
+        </Button>
+      </template>
+    </FormPanel>
+  </form>
 </template>

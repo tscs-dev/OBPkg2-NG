@@ -14,7 +14,7 @@ const props = defineProps<Props>()
   <section :class="cn('border border-border bg-card', props.class)">
     <header v-if="title" class="min-h-9 px-4 py-2 bg-muted/40 border-b border-border flex flex-wrap items-center justify-between gap-2">
       <div class="min-w-0">
-        <h2 class="text-xs font-semibold tracking-wide text-foreground">
+        <h2 class="text-xs font-semibold trackingdisabled-wide text-foreground">
           {{ title }}
         </h2>
         <p v-if="description" class="text-[11px] text-muted-foreground mt-0.5">

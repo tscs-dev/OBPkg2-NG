@@ -210,3 +210,26 @@
 .package-prose figure.image {
   margin-block: 1rem;
 }
+
+/* TipTap 编辑器内嵌排版与选中态 */
+.tiptap {
+  outline: none;
+}
+
+.tiptap.package-prose img {
+  cursor: pointer;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tiptap > :first-child {
+  margin-top: 0;
+}
+
+.tiptap > :last-child {
+  margin-bottom: 0;
+}
+

@@ -27,7 +27,7 @@ const { t } = useI18n()
 const preferences = usePreferencesStore()
 
 const sortedFiles = computed(() => {
-  const list = props.files ?? []
+  const list = (props.files ?? []).filter((file) => !file.NeedValidation || file.Validated)
   if (list.length === 0) return []
 
   const sorted = [...list].sort((a, b) => {
@@ -105,7 +105,7 @@ const sortedFiles = computed(() => {
                 </span>
                 <span
                   v-if="file.isLatestVersion"
-                  class="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-primary/10 text-primary border border-primary/20"
+                  class="px-1.5 py-0.5 text-[10px] font-semibold uppercase trackingdisabled-wide bg-primary/10 text-primary border border-primary/20"
                 >
                   {{ t('detail.downloadsLatest') }}
                 </span>

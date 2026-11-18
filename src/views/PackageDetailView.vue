@@ -9,9 +9,9 @@ import {
   Copy,
   Download,
   ExternalLink,
-  Globe,
   Mail,
   MessageSquare,
+  Pencil,
   RefreshCw,
   ZoomIn,
 } from '@lucide/vue'
@@ -19,7 +19,9 @@ import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import PackageThumbnail from '@/components/package/PackageThumbnail.vue'
 import PlatformBadge from '@/components/package/PlatformBadge.vue'
 import PackageVersionList from '@/components/package/PackageVersionList.vue'
+import HomepageCtaButton from '@/components/package/HomepageCtaButton.vue'
 import { usePackageDetailQuery } from '@/queries/packages'
+import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
@@ -47,6 +49,7 @@ type DetailTab = 'description' | 'downloads' | 'comments'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
@@ -96,7 +99,11 @@ const uploaderDisplayName = computed(() => {
   return preferences.formatS3(pkg.value.Uploader.Name)
 })
 
-const filesCount = computed(() => pkg.value?.Files?.length ?? 0)
+const visibleFiles = computed(() =>
+  (pkg.value?.Files ?? []).filter((file) => !file.NeedValidation || file.Validated),
+)
+
+const filesCount = computed(() => visibleFiles.value.length)
 
 const sanitizedDescription = computed(() =>
   sanitizePackageHtml(pkg.value?.Description),
@@ -317,22 +324,17 @@ watchEffect(() => {
           </div>
 
           <!-- 右侧主行动区 -->
-          <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <Button
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <HomepageCtaButton
               v-if="pkg.Homepage"
-              as-child
-              variant="outline"
-              class="rounded-none"
-            >
-              <a :href="pkg.Homepage" target="_blank" rel="noopener noreferrer">
-                <Globe class="size-4" />
-                <span>{{ t('detail.homepageButton') }}</span>
-              </a>
-            </Button>
+              :href="pkg.Homepage"
+              :label="t('detail.visitHomepageTitle')"
+            />
 
             <Button
               :disabled="filesCount === 0"
               class="rounded-none cursor-pointer"
+              :class="pkg.Homepage ? 'h-11 px-4' : ''"
               @click="jumpToDownloads"
             >
               <Download class="size-4" />
@@ -398,7 +400,7 @@ watchEffect(() => {
               <TabsContent value="downloads" class="pt-5 mt-0">
                 <PackageVersionList
                   :package-id="pkg.ID"
-                  :files="pkg.Files"
+                  :files="visibleFiles"
                 />
               </TabsContent>
 
@@ -420,9 +422,25 @@ watchEffect(() => {
           <!-- 右侧元数据侧栏 -->
           <template #sidebar>
             <div class="flex flex-col gap-5">
+              <!-- 编辑按钮 -->
+              <section v-if="authStore.canEditPackage(pkg)" class="space-y-3">
+                <Button
+                  as-child
+                  size="sm"
+                  variant="ghost"
+                  class="rounded-none"
+                >
+                  <router-link :to="`/packages/${pkg.ID}/edit/info`">
+                    <Pencil class="size-4" />
+                    <span>{{ t('detail.editButton') }}</span>
+                  </router-link>
+                </Button>
+                <Separator />
+              </section>
+
               <!-- 创作者与上传者 -->
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('detail.meta.peopleHeading') }}
                 </h2>
 
@@ -520,7 +538,7 @@ watchEffect(() => {
 
               <!-- 技术元数据 -->
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('detail.meta.specsHeading') }}
                 </h2>
 

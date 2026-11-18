@@ -5,6 +5,7 @@ declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     guestOnly?: boolean
+    minPrivilege?: number
   }
 }
 
@@ -40,6 +41,18 @@ const router = createRouter({
       component: () => import('@/views/PackageListView.vue'),
     },
     {
+      path: '/packages/new',
+      component: () => import('@/views/package-edit/PackageEditLayoutView.vue'),
+      meta: { requiresAuth: true, minPrivilege: 0 },
+      children: [
+        {
+          path: '',
+          name: 'package-new',
+          component: () => import('@/views/package-edit/PackageEditInfoView.vue'),
+        },
+      ],
+    },
+    {
       path: '/packages/:id',
       name: 'package-detail',
       component: () => import('@/views/PackageDetailView.vue'),
@@ -50,6 +63,57 @@ const router = createRouter({
         }
         return true
       },
+    },
+    {
+      path: '/packages/:id/edit',
+      component: () => import('@/views/package-edit/PackageEditLayoutView.vue'),
+      meta: { requiresAuth: true },
+      redirect: (to) => `/packages/${to.params.id}/edit/info`,
+      beforeEnter(to) {
+        const raw = String(to.params.id ?? '')
+        if (!/^\d+$/.test(raw) || Number.parseInt(raw, 10) <= 0) {
+          return { name: 'packages', replace: true }
+        }
+        return true
+      },
+      children: [
+        {
+          path: 'info',
+          name: 'package-edit-info',
+          component: () => import('@/views/package-edit/PackageEditInfoView.vue'),
+        },
+        {
+          path: 'gallery',
+          name: 'package-edit-gallery',
+          component: () => import('@/views/package-edit/PackageEditGalleryView.vue'),
+        },
+        {
+          path: 'description',
+          name: 'package-edit-description',
+          component: () => import('@/views/package-edit/PackageEditDescriptionView.vue'),
+        },
+        {
+          path: 'versions',
+          name: 'package-edit-versions',
+          component: () => import('@/views/package-edit/PackageEditVersionsView.vue'),
+        },
+        {
+          path: 'versions/new',
+          name: 'package-edit-version-new',
+          component: () => import('@/views/package-edit/PackageEditVersionFormView.vue'),
+        },
+        {
+          path: 'versions/:fileId',
+          name: 'package-edit-version-edit',
+          component: () => import('@/views/package-edit/PackageEditVersionFormView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/admin/files',
+      name: 'admin-files',
+      meta: { requiresAuth: true, minPrivilege: 10 },
+      component: () => import('@/views/admin/AdminFileListView.vue'),
     },
     {
       path: '/uploaders/:id',
@@ -124,7 +188,8 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
     },
   ],
 })
@@ -140,6 +205,10 @@ router.beforeEach((to) => {
       },
       replace: true,
     }
+  }
+
+  if (typeof to.meta.minPrivilege === 'number' && authStore.privilege < to.meta.minPrivilege) {
+    return { name: 'home', replace: true }
   }
 
   if (to.meta.guestOnly && authStore.isLoggedIn) {

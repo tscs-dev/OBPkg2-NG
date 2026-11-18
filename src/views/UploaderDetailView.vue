@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Globe,
   Mail,
   Pencil,
   RefreshCw,
@@ -17,6 +16,7 @@ import {
 } from '@lucide/vue'
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
+import HomepageCtaButton from '@/components/package/HomepageCtaButton.vue'
 import { useUploaderDetailQuery } from '@/queries/uploaders'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
@@ -384,33 +384,12 @@ watchEffect(() => {
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 shrink-0">
-            <Button
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <HomepageCtaButton
               v-if="uploader.Homepage"
-              as-child
-              variant="outline"
-              size="sm"
-              class="rounded-none"
-            >
-              <a :href="uploader.Homepage" target="_blank" rel="noopener noreferrer">
-                <Globe class="size-3.5" />
-                <span>{{ t('uploader.websiteButton') }}</span>
-              </a>
-            </Button>
-
-            <Button
-              v-if="canEdit"
-              as-child
-              size="sm"
-              class="rounded-none"
-            >
-              <router-link :to="editLocation">
-                <Pencil class="size-3.5" />
-                <span>
-                  {{ isSelf ? t('uploader.editProfileButton') : t('uploader.manageProfileButton') }}
-                </span>
-              </router-link>
-            </Button>
+              :href="uploader.Homepage"
+              :label="t('uploader.visitWebsiteTitle')"
+            />
           </div>
         </div>
       </section>
@@ -543,7 +522,7 @@ watchEffect(() => {
             <!-- 情形 2：合流模式（无介绍 或 桌面端短介绍 <= 48vh） -->
             <div v-else class="flex flex-col gap-6">
               <section v-if="sanitizedBio" class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.bioHeading') }}
                 </h2>
                 <div
@@ -642,8 +621,26 @@ watchEffect(() => {
           <!-- 右侧元数据侧栏 -->
           <template #sidebar>
             <div class="flex flex-col gap-5">
+              <!-- 编辑按钮 -->
+              <section v-if="canEdit" class="space-y-3">
+                <Button
+                  as-child
+                  size="sm"
+                  variant="ghost"
+                  class="rounded-none"
+                >
+                  <router-link :to="editLocation">
+                    <Pencil class="size-3.5" />
+                    <span>
+                      {{ isSelf ? t('uploader.editProfileButton') : t('uploader.manageProfileButton') }}
+                    </span>
+                  </router-link>
+                </Button>
+                <Separator />
+              </section>
+
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.meta.accountHeading') }}
                 </h2>
 
@@ -702,7 +699,7 @@ watchEffect(() => {
               <Separator />
 
               <section class="space-y-3">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 class="text-xs font-semibold uppercase trackingdisabled-wider text-muted-foreground">
                   {{ t('uploader.meta.statsHeading') }}
                 </h2>
 

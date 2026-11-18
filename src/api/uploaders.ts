@@ -1,5 +1,10 @@
 import { apiClient } from './client'
-import type { UpdateUploaderPayload, Uploader, UploaderDetail } from '@/types/models'
+import type {
+  UpdateUploaderDescriptionPayload,
+  UpdateUploaderPayload,
+  Uploader,
+  UploaderDetail,
+} from '@/types/models'
 
 export async function fetchUploaderDetail(
   id: number,
@@ -12,7 +17,7 @@ export async function fetchUploaderDetail(
 
 export async function updateUploaderProfile(
   id: number,
-  payload: UpdateUploaderPayload,
+  payload: UpdateUploaderPayload | UpdateUploaderDescriptionPayload,
 ): Promise<Uploader> {
   return apiClient<Uploader>(`/uploaders/${id}`, {
     method: 'POST',

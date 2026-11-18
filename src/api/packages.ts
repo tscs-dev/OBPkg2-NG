@@ -1,5 +1,12 @@
 import { apiClient, fetchPaginated } from './client'
-import type { PackageDetail, PackageSummary, PaginatedResult } from '@/types/models'
+import type {
+  PackageDetail,
+  PackageSummary,
+  PaginatedResult,
+  SavePackageDescriptionPayload,
+  SavePackageGalleryPayload,
+  SavePackageInfoPayload,
+} from '@/types/models'
 
 export type PlatformFilter = '+' | 'hmmsim' | 'openbve' | 'all'
 
@@ -43,5 +50,28 @@ export async function fetchPackageDetail(
 ): Promise<PackageDetail> {
   return apiClient<PackageDetail>(`/packages/${id}`, {
     signal,
+  })
+}
+
+export async function createPackage(payload: SavePackageInfoPayload): Promise<PackageDetail> {
+  return apiClient<PackageDetail>('/packages', {
+    method: 'PUT',
+    body: payload,
+  })
+}
+
+export async function updatePackage(
+  id: number,
+  payload: SavePackageInfoPayload | SavePackageGalleryPayload | SavePackageDescriptionPayload,
+): Promise<PackageDetail> {
+  return apiClient<PackageDetail>(`/packages/${id}`, {
+    method: 'POST',
+    body: payload,
+  })
+}
+
+export async function deletePackage(id: number): Promise<void> {
+  await apiClient(`/packages/${id}`, {
+    method: 'DELETE',
   })
 }
