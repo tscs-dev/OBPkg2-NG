@@ -1,4 +1,7 @@
+import type { QueryClient } from '@tanstack/vue-query'
 import { apiClient, bareApiClient, normalizeApiError } from './client'
+import { decodeJwtPayload } from '@/stores/auth'
+import { uploaderKeys } from '@/queries/uploaders'
 import { formatLocalTimestamp } from '@/utils/date'
 import type {
   ActivatePayload,
@@ -9,6 +12,7 @@ import type {
   RegisterResponse,
   TokenResponse,
   Uploader,
+  UploaderDetail,
 } from '@/types/models'
 
 export async function loginApi(payload: LoginPayload): Promise<TokenResponse> {
@@ -46,6 +50,26 @@ export async function changePasswordApi(payload: ChangePasswordPayload): Promise
   })
 }
 
+/**
+ * JWT 解码 → 拉取用户资料 → 写入 store 和查询缓存。
+ * 供 LoginView / ActivateView 共用。
+ */
+export async function setupSessionFromToken(
+  token: string,
+  authStore: { setSession: (token: string, profile: Uploader) => void },
+  queryClient: QueryClient,
+): Promise<void> {
+  const payload = decodeJwtPayload(token)
+  if (!payload?.uid) {
+    throw new Error('Invalid server response: missing user ID in token')
+  }
+  const uploader = await bareApiClient<UploaderDetail>(`/uploaders/${payload.uid}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  authStore.setSession(token, uploader)
+  queryClient.setQueryData(uploaderKeys.detail(payload.uid), uploader)
+}
+
 const KNOWN_ERROR_CODES = new Set([111, 112, 113, 114, 201, 202, 203, 204, 205, 211, 212, 213, 214, 221])
 
 export function formatApiErrorMessage(
@@ -67,7 +91,7 @@ export function formatApiErrorMessage(
   }
 
   if (apiErr.status === undefined) {
-    return t('errors.network')
+    return apiErr.isNetworkError ? t('errors.network') : apiErr.message
   }
 
   if (apiErr.code) {

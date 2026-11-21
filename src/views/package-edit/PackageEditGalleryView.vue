@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -18,6 +18,7 @@ import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/package
 import { uploadImageToLsky } from '@/api/lsky'
 import { updatePackage } from '@/api/packages'
 import { formatApiErrorMessage } from '@/api/auth'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
@@ -40,39 +41,57 @@ const errorMsg = ref('')
 const saveSuccess = ref(false)
 const isDragging = ref(false)
 const lightboxOpen = ref(false)
+const lastFilledId = ref<number | null>(null)
+let suppressDirty = false
+let uploadSeq = 0
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
 watch(
   () => packageQuery.data.value,
   (data) => {
     if (!data) return
+    if (data.ID === lastFilledId.value && isDirty.value) return
+    lastFilledId.value = data.ID
+    suppressDirty = true
     thumbnail.value = data.Thumbnail ?? ''
     thumbnailLq.value = data.ThumbnailLQ ?? ''
     errorMsg.value = ''
     saveSuccess.value = false
+    void nextTick(() => { suppressDirty = false; resetDirty() })
   },
   { immediate: true },
 )
 
+watch([thumbnail, thumbnailLq], () => {
+  if (!suppressDirty) markDirty()
+})
+
 const hasCover = computed(() => Boolean(thumbnail.value.trim()))
 
 async function processFileUpload(file: File) {
+  if (isUploading.value || isSaving.value) return
   if (!file.type.startsWith('image/')) {
     errorMsg.value = t('packageEdit.gallery.invalidImageType')
     return
   }
+  const seq = ++uploadSeq
   isUploading.value = true
   errorMsg.value = ''
   saveSuccess.value = false
   try {
     const result = await uploadImageToLsky(file)
+    if (seq !== uploadSeq) return
     thumbnail.value = result.fullUrl
     thumbnailLq.value = result.thumbUrl
   } catch (err) {
+    if (seq !== uploadSeq) return
     errorMsg.value = err instanceof Error ? err.message : t('editor.uploadError')
   } finally {
-    isUploading.value = false
+    if (seq === uploadSeq) {
+      isUploading.value = false
+    }
   }
 }
 
@@ -103,15 +122,17 @@ function handleRemoveCover() {
 async function handleSave() {
   if (!packageId.value || isSaving.value || isUploading.value) return
   isSaving.value = true
+  const pkgId = packageId.value
   errorMsg.value = ''
   saveSuccess.value = false
 
   try {
-    await updatePackage(packageId.value, {
+    await updatePackage(pkgId, {
       Thumbnail: thumbnail.value.trim(),
       ThumbnailLQ: thumbnail.value.trim() ? thumbnailLq.value.trim() : '',
     })
-    await invalidatePackage(packageId.value)
+    resetDirty()
+    await invalidatePackage(pkgId)
     await invalidatePackageLists()
     saveSuccess.value = true
   } catch (err) {

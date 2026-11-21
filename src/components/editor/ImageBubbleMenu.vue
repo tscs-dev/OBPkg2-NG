@@ -29,12 +29,22 @@ async function handleFileSelected(e: Event) {
   input.value = ''
   if (!file || !file.type.startsWith('image/')) return
 
+  // 记录当前选中图片的位置，上传期间选区可能移动
+  const { from } = props.editor.state.selection
+
   isReplacing.value = true
   try {
     const result = await uploadImageToLsky(file)
-    props.editor.chain().focus().updateAttributes('image', { src: result.fullUrl }).run()
+    // 写回原位置的图片节点，而非当时的选区
+    const node = props.editor.state.doc.nodeAt(from)
+    if (node?.type.name === 'image') {
+      props.editor.chain().setNodeSelection(from).updateAttributes('image', { src: result.fullUrl }).run()
+    } else {
+      // 回退：如果原位置不再是图片，尝试当前选区
+      props.editor.chain().focus().updateAttributes('image', { src: result.fullUrl }).run()
+    }
   } catch {
-    // Error is non-critical for replace; image stays as-is
+    // 替换失败，图片保持原样
   } finally {
     isReplacing.value = false
   }

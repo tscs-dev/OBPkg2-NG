@@ -12,13 +12,12 @@ import {
   checkActivationTokenApi,
   formatApiErrorMessage,
   loginApi,
+  setupSessionFromToken,
 } from '@/api/auth'
-import { bareApiClient } from '@/api/client'
-import { decodeJwtPayload, useAuthStore } from '@/stores/auth'
-import { uploaderKeys } from '@/queries/uploaders'
+import { useAuthStore } from '@/stores/auth'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
-import type { String3, UploaderDetail } from '@/types/models'
+import type { String3 } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -44,6 +43,7 @@ const nameS3 = ref<String3>({ Local: '', English: '', Tag: '' })
 const submittedOnce = ref(false)
 const isSubmitting = ref(false)
 const submitError = ref('')
+const activated = ref(false)
 
 const passwordError = computed(() => {
   if (!submittedOnce.value) return null
@@ -62,7 +62,10 @@ const confirmPasswordError = computed(() => {
 
 const s3Errors = computed(() => validateString3(nameS3.value, (key) => t(key)))
 
+let verifySeq = 0
+
 async function verifyToken(token: string) {
+  const seq = ++verifySeq
   checking.value = true
   tokenError.value = ''
   verifiedEmail.value = ''
@@ -75,11 +78,15 @@ async function verifyToken(token: string) {
 
   try {
     const res = await checkActivationTokenApi(token)
+    if (seq !== verifySeq) return
     verifiedEmail.value = res.Email
   } catch (err) {
+    if (seq !== verifySeq) return
     tokenError.value = formatApiErrorMessage(err, t, te)
   } finally {
-    checking.value = false
+    if (seq === verifySeq) {
+      checking.value = false
+    }
   }
 }
 
@@ -111,25 +118,21 @@ async function handleSubmit() {
       Password: password.value,
       Name: normalizeString3ForSubmit(nameS3.value),
     })
+    activated.value = true
 
-    // 激活成功后自动登录
-    const tokenRes = await loginApi({
-      username: verifiedEmail.value,
-      password: password.value,
-    })
-
-    const payload = decodeJwtPayload(tokenRes.token)
-    if (payload?.uid) {
-      const uploader = await bareApiClient<UploaderDetail>(`/uploaders/${payload.uid}`, {
-        headers: {
-          Authorization: `Bearer ${tokenRes.token}`,
-        },
+    // 尝试自动登录（激活令牌已消耗，失败时只显示"去登录"链接）
+    try {
+      const tokenRes = await loginApi({
+        username: verifiedEmail.value,
+        password: password.value,
       })
-      authStore.setSession(tokenRes.token, uploader)
-      queryClient.setQueryData(uploaderKeys.detail(payload.uid), uploader)
+      await setupSessionFromToken(tokenRes.token, authStore, queryClient)
+      if (router.currentRoute.value.name === 'activate') {
+        await router.replace({ name: 'settings-profile' })
+      }
+    } catch {
+      // 自动登录失败，模板通过 `activated` ref 显示成功消息 + 登录链接
     }
-
-    await router.replace({ name: 'settings-profile' })
   } catch (err) {
     submitError.value = formatApiErrorMessage(err, t, te)
   } finally {
@@ -181,6 +184,24 @@ watchEffect(() => {
       <template #footer>
         <Button as-child size="sm" class="w-full rounded-none">
           <router-link to="/auth/register">{{ t('auth.activateResendButton') }}</router-link>
+        </Button>
+      </template>
+    </FormPanel>
+
+    <!-- 激活成功但自动登录失败 -->
+    <FormPanel
+      v-else-if="activated"
+      :title="t('auth.activateTitle')"
+    >
+      <div class="p-4 space-y-3">
+        <div class="flex items-start gap-2.5 text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 class="size-4 shrink-0 mt-0.5" />
+          <p class="font-medium text-sm">{{ t('auth.activateSuccessGoLogin') }}</p>
+        </div>
+      </div>
+      <template #footer>
+        <Button as-child size="sm" class="w-full rounded-none">
+          <router-link :to="{ name: 'login' }">{{ t('auth.goLogin') }}</router-link>
         </Button>
       </template>
     </FormPanel>

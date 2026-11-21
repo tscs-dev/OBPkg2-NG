@@ -361,8 +361,8 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 watch(
-  () => [props.open, props.initialIndex, props.src],
-  ([isOpen]) => {
+  () => props.open,
+  (isOpen, wasOpen) => {
     if (isOpen) {
       const len = normalizedImages.value.length
       const idx = Math.max(0, Math.min(props.initialIndex ?? 0, Math.max(0, len - 1)))
@@ -372,8 +372,10 @@ watch(
       hasError.value = false
       naturalWidth.value = 0
       renderedFitWidth.value = 0
-      window.addEventListener('keydown', handleKeydown)
-      window.addEventListener('resize', measureFitWidth)
+      if (!wasOpen) {
+        window.addEventListener('keydown', handleKeydown)
+        window.addEventListener('resize', measureFitWidth)
+      }
     } else {
       activePointers.clear()
       isDragging.value = false
@@ -383,6 +385,12 @@ watch(
   },
   { immediate: true },
 )
+
+watch(normalizedImages, (imgs) => {
+  if (imgs.length > 0 && currentIndex.value >= imgs.length) {
+    currentIndex.value = imgs.length - 1
+  }
+})
 
 watch(currentItem, () => {
   resetTransform()

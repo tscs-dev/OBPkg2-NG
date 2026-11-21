@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDebounceFn } from '@vueuse/core'
 import { RotateCcw, Search, X } from '@lucide/vue'
 import type { PlatformFilter } from '@/api/packages'
 import { PLATFORMS } from '@/config/platforms'
@@ -28,18 +27,21 @@ const preferences = usePreferencesStore()
 
 const draftKeyword = ref(props.keyword)
 
-watch(
-  () => props.keyword,
-  (val) => {
-    if (val !== draftKeyword.value) {
-      draftKeyword.value = val
-    }
-  },
-)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
-const commitSearchDebounced = useDebounceFn((value: string) => {
-  emit('update:keyword', value.trim())
-}, 320)
+function cancelDebounce() {
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer)
+    debounceTimer = null
+  }
+}
+
+function commitSearchDebounced(value: string) {
+  cancelDebounce()
+  debounceTimer = setTimeout(() => {
+    emit('update:keyword', value.trim())
+  }, 320)
+}
 
 function handleInput(e: Event) {
   const value = (e.target as HTMLInputElement).value
@@ -48,13 +50,27 @@ function handleInput(e: Event) {
 }
 
 function submitImmediately() {
+  cancelDebounce()
   emit('update:keyword', draftKeyword.value.trim())
 }
 
 function clearSearch() {
+  cancelDebounce()
   draftKeyword.value = ''
   emit('update:keyword', '')
 }
+
+watch(
+  () => props.keyword,
+  (val) => {
+    if (val !== draftKeyword.value) {
+      cancelDebounce()
+      draftKeyword.value = val
+    }
+  },
+)
+
+onBeforeUnmount(cancelDebounce)
 
 const platformOptions = computed<
   { value: PlatformFilter; label: string; color?: string }[]

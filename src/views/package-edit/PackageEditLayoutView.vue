@@ -20,7 +20,8 @@ import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { usePackageDetailQuery } from '@/queries/packages'
-import { hasSubstantialHtmlContent } from '@/utils/format'
+import { hasSubstantialHtmlContent, parsePositiveIntParam } from '@/utils/format'
+import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -28,7 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
@@ -46,6 +47,9 @@ const packageId = computed<number | null>(() => {
 
 const packageQuery = usePackageDetailQuery(packageId)
 const pkg = computed(() => (isCreateMode.value ? null : packageQuery.data.value ?? null))
+const packageErrorMessage = computed(() =>
+  packageQuery.error.value ? formatApiErrorMessage(packageQuery.error.value, t, te) : '',
+)
 
 // 无编辑权限时跳回作品详情页
 watch(
@@ -76,8 +80,8 @@ const activeFileLabel = computed(() => {
   if (route.name === 'package-edit-version-new') {
     return t('packageEdit.nav.createVersion')
   }
-  const rawFileId = Number.parseInt(String(route.params.fileId ?? ''), 10)
-  const found = pkg.value?.Files?.find((f) => f.ID === rawFileId)
+  const parsedFileId = parsePositiveIntParam(route.params.fileId)
+  const found = parsedFileId ? pkg.value?.Files?.find((f) => f.ID === parsedFileId) : null
   if (found) {
     return t('packageEdit.nav.editVersionWithNum', { version: found.Version })
   }
@@ -183,7 +187,7 @@ watchEffect(() => {
         {{ packageId === null ? t('detail.invalidIdTitle') : t('detail.notFoundTitle') }}
       </h1>
       <p class="text-sm text-muted-foreground">
-        {{ packageQuery.error.value?.message || t('errors.notFound') }}
+        {{ packageErrorMessage || t('errors.notFound') }}
       </p>
       <div class="flex items-center gap-2 pt-1">
         <Button as-child variant="outline" size="sm" class="rounded-none">

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
@@ -13,28 +12,20 @@ import { updateUploaderProfile } from '@/api/uploaders'
 import { formatApiErrorMessage } from '@/api/auth'
 import { buildWikiDocUrl } from '@/api/portal'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
+import { useSettingsTarget } from '@/composables/useSettingsTarget'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import type { String3 } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const route = useRoute()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { invalidateUploader } = useUploaderCacheActions()
 
-const targetUserId = computed<number | null>(() => {
-  const rawUid = route.query.uid
-  if (rawUid && authStore.privilege >= 50) {
-    const parsed = Number.parseInt(String(rawUid), 10)
-    if (Number.isInteger(parsed) && parsed > 0) {
-      return parsed
-    }
-  }
-  return authStore.currentUserId
-})
-
+const { targetUserId } = useSettingsTarget()
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
 const nameForm = ref<String3>({ Local: '', English: '', Tag: '' })
 const homepageForm = ref('')
@@ -43,11 +34,16 @@ const submittedOnce = ref(false)
 const isSaving = ref(false)
 const saveError = ref('')
 const saveSuccess = ref(false)
+const lastFilledId = ref<number | null>(null)
+let suppressDirty = false
 
 watch(
   () => uploaderQuery.data.value,
   (data) => {
     if (!data) return
+    if (data.ID === lastFilledId.value && isDirty.value) return
+    lastFilledId.value = data.ID
+    suppressDirty = true
     nameForm.value = {
       Local: data.Name?.Local ?? '',
       English: data.Name?.English ?? '',
@@ -56,9 +52,17 @@ watch(
     homepageForm.value = data.Homepage ?? ''
     saveSuccess.value = false
     saveError.value = ''
+    void nextTick(() => {
+      suppressDirty = false
+      resetDirty()
+    })
   },
   { immediate: true },
 )
+
+watch([nameForm, homepageForm], () => {
+  if (!suppressDirty) markDirty()
+}, { deep: true })
 
 const s3Errors = computed(() => validateString3(nameForm.value, (key) => t(key)))
 
@@ -93,17 +97,18 @@ async function handleSubmit() {
   }
 
   isSaving.value = true
+  const uid = targetUserId.value
   try {
-    const updated = await updateUploaderProfile(targetUserId.value, {
+    const updated = await updateUploaderProfile(uid, {
       Name: normalizeString3ForSubmit(nameForm.value),
       Homepage: homepageForm.value.trim(),
     })
 
-    if (authStore.currentUserId === targetUserId.value) {
-      // 深拷贝隔离：防止编辑器输入引用直接影响顶栏显示
+    if (authStore.currentUserId === uid) {
       authStore.updateProfile(JSON.parse(JSON.stringify(updated)))
     }
-    await invalidateUploader(targetUserId.value)
+    await invalidateUploader(uid)
+    resetDirty()
     saveSuccess.value = true
   } catch (err) {
     saveError.value = formatApiErrorMessage(err, t, te)
@@ -115,7 +120,7 @@ async function handleSubmit() {
 
 <template>
   <!-- 加载骨架 -->
-  <div v-if="uploaderQuery.isPending.value" class="space-y-5">
+  <div v-if="uploaderQuery.isLoading.value" class="space-y-5">
     <FormPanel :title="t('settings.profile.namePanelTitle')">
       <div class="p-4 space-y-3">
         <Skeleton class="h-8 w-80 rounded-none" />
@@ -132,7 +137,7 @@ async function handleSubmit() {
   >
     <p class="text-sm font-medium text-foreground">{{ t('uploader.notFoundTitle') }}</p>
     <p class="text-sm text-muted-foreground">
-      {{ uploaderQuery.error.value?.message || t('errors.network') }}
+      {{ formatApiErrorMessage(uploaderQuery.error.value, t, te) }}
     </p>
     <Button
       variant="outline"

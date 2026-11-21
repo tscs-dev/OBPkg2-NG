@@ -11,8 +11,20 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const displayHost = computed(() => {
+const safeHref = computed(() => {
   const raw = props.href.trim()
+  if (!raw) return ''
+  try {
+    const parsed = new URL(raw)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return raw
+    }
+  } catch { /* invalid URL → not safe */ }
+  return ''
+})
+
+const displayHost = computed(() => {
+  const raw = safeHref.value
   if (!raw) return ''
   try {
     const parsed = new URL(raw)
@@ -25,7 +37,8 @@ const displayHost = computed(() => {
 
 <template>
   <a
-    :href="href"
+    v-if="safeHref"
+    :href="safeHref"
     target="_blank"
     rel="noopener noreferrer"
     :class="

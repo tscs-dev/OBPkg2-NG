@@ -44,6 +44,7 @@ export default {
     save: '保存更改',
     saving: '保存中…',
     saved: '已保存更改',
+    unsavedChangesWarning: '当前页面有未保存的修改，确定离开吗？',
   },
   home: {
     recentPackages: '最近更新作品',
@@ -76,7 +77,7 @@ export default {
     platformDownloadable: '可获取的全部作品',
     platformAll: '全部作品（含无文件）',
     allEntriesNotice:
-      '提示：标有“暂不可下载”的条目并不代表资源审核未通过；多数情况下是因为上传者尚未提供实际文件，或仅为先行注册占位而无已制作完成的内容。若需仅浏览可获取的资源，请选择“全部作品”。',
+      '提示：标有“暂不可下载”的条目并不代表资源审核未通过；多数情况下是因为上传者尚未提供实际文件，或仅为先行注册占位而无已制作完成的内容。若需仅浏览可获取的资源，请选择“可获取的全部作品”。',
     displayOptions: '显示选项',
     preferEnglishDesc: '优先以英文显示作品名',
     resetFilters: '重置筛选条件',
@@ -191,6 +192,7 @@ export default {
     activateExpiredTitle: '激活链接无效或已过期',
     activateExpiredDesc: '该激活链接可能已超过有效期或已被使用，请重新发起注册以获取新的激活邮件。',
     activateResendButton: '重新发送激活邮件',
+    activateSuccessGoLogin: '账号激活成功！请前往登录。',
     activateVerifiedEmail: '已通过验证的邮箱',
     activatePasswordLabel: '设置密码',
     activatePasswordHint: '至少 6 个字符，且首尾不可包含空格。',
@@ -298,6 +300,7 @@ export default {
     uploading_count: '上传中 {count} 张...',
     retryUpload: '重试',
     removeUpload: '移除',
+    uploadOrphan: '上传记录已丢失',
     waitForUpload: '请等待图片上传完成',
     urlMustHttps: '链接必须以 https:// 开头',
   },

@@ -20,8 +20,7 @@ import { useFileCacheActions } from '@/queries/files'
 import { deleteFile } from '@/api/files'
 import { formatApiErrorMessage } from '@/api/auth'
 import { buildWikiDocUrl } from '@/api/portal'
-import { compareVersionsDesc } from '@/utils/version'
-import { PLATFORM_ORDER } from '@/config/platforms'
+import { sortPackageFiles } from '@/utils/package'
 import type { PackageFile } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,17 +51,9 @@ const packageId = computed<number | null>(() => {
 
 const packageQuery = usePackageDetailQuery(packageId)
 
-const sortedFiles = computed(() => {
-  const list = packageQuery.data.value?.Files ?? []
-  return [...list].sort((a, b) => {
-    const cmp = compareVersionsDesc(a.Version, b.Version)
-    if (cmp !== 0) return cmp
-    const idxA = PLATFORM_ORDER.indexOf(a.Platform as (typeof PLATFORM_ORDER)[number])
-    const idxB = PLATFORM_ORDER.indexOf(b.Platform as (typeof PLATFORM_ORDER)[number])
-    if (idxA !== -1 && idxB !== -1 && idxA !== idxB) return idxA - idxB
-    return b.ID - a.ID
-  })
-})
+const sortedFiles = computed(() =>
+  sortPackageFiles(packageQuery.data.value?.Files ?? []),
+)
 
 const fileFieldsDocUrl = computed(() =>
   buildWikiDocUrl(preferences.locale, 'filefields'),
@@ -81,10 +72,12 @@ async function confirmDeleteFile() {
   if (!deleteTarget.value || !packageId.value || isDeleting.value) return
   isDeleting.value = true
   deleteError.value = ''
+  const fileId = deleteTarget.value.ID
+  const pkgId = packageId.value
   try {
-    await deleteFile(deleteTarget.value.ID)
+    await deleteFile(fileId)
     deleteTarget.value = null
-    await invalidatePackage(packageId.value)
+    await invalidatePackage(pkgId)
     await invalidatePackageLists()
     await invalidateFiles()
   } catch (err) {
@@ -263,9 +256,14 @@ async function confirmDeleteFile() {
     <!-- 删除文件确认框 -->
     <Dialog
       :open="Boolean(deleteTarget)"
-      @update:open="(v) => { if (!v) deleteTarget = null }"
+      @update:open="(v: boolean) => { if (!v && !isDeleting) deleteTarget = null }"
     >
-      <DialogContent class="max-w-md rounded-none">
+      <DialogContent
+        class="max-w-md rounded-none"
+        :show-close-button="!isDeleting"
+        @interact-outside="(e: Event) => { if (isDeleting) e.preventDefault() }"
+        @escape-key-down="(e: Event) => { if (isDeleting) e.preventDefault() }"
+      >
         <DialogHeader>
           <DialogTitle class="text-base">{{ t('packageEdit.versions.deleteConfirmTitle') }}</DialogTitle>
           <DialogDescription class="text-sm leading-relaxed">

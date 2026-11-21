@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, FileText, Shield, User, UserCog } from '@lucide/vue'
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
@@ -8,38 +8,25 @@ import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useUploaderDetailQuery } from '@/queries/uploaders'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
+import { useSettingsTarget } from '@/composables/useSettingsTarget'
 import { Separator } from '@/components/ui/separator'
 
 const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
 
-const targetUserId = computed<number | null>(() => {
-  const rawUid = route.query.uid
-  if (rawUid && authStore.privilege >= 50) {
-    const parsed = Number.parseInt(String(rawUid), 10)
-    if (Number.isInteger(parsed) && parsed > 0) {
-      return parsed
-    }
+const { targetUserId, isEditingOther, uidQuery: targetQuery } = useSettingsTarget()
+
+// 管理员编辑他人时禁止进入安全页（密码只能改自己的）
+watchEffect(() => {
+  if (isEditingOther.value && route.name === 'settings-security') {
+    void router.replace({ name: 'settings-profile', query: targetQuery.value })
   }
-  return authStore.currentUserId
 })
-
-const isEditingOther = computed(
-  () =>
-    targetUserId.value !== null &&
-    authStore.currentUserId !== null &&
-    targetUserId.value !== authStore.currentUserId,
-)
-
-const targetQuery = computed(() =>
-  isEditingOther.value && targetUserId.value
-    ? { uid: String(targetUserId.value) }
-    : undefined,
-)
 
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
 

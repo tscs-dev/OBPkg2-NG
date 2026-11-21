@@ -1,34 +1,24 @@
 <script setup lang="ts">
-import { type ComponentPublicInstance, computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { type ComponentPublicInstance, computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
 import RichTextEditor from '@/components/editor/RichTextEditor.vue'
-import { useAuthStore } from '@/stores/auth'
 import { useUploaderCacheActions, useUploaderDetailQuery } from '@/queries/uploaders'
 import { updateUploaderProfile } from '@/api/uploaders'
 import { formatApiErrorMessage } from '@/api/auth'
+import { useSettingsTarget } from '@/composables/useSettingsTarget'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { sanitizePackageHtml } from '@/utils/sanitize'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const route = useRoute()
 const { t, te } = useI18n()
-const authStore = useAuthStore()
 const { invalidateUploader } = useUploaderCacheActions()
 
-const targetUserId = computed<number | null>(() => {
-  const rawUid = route.query.uid
-  if (rawUid && authStore.privilege >= 50) {
-    const parsed = Number.parseInt(String(rawUid), 10)
-    if (Number.isInteger(parsed) && parsed > 0) {
-      return parsed
-    }
-  }
-  return authStore.currentUserId
-})
-
+const { targetUserId } = useSettingsTarget()
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
 const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean }>>()
 const isEditorBusy = computed(() => editorRef.value?.hasActiveUploads ?? false)
@@ -37,29 +27,44 @@ const bioHtml = ref('')
 const isSaving = ref(false)
 const saveError = ref('')
 const saveSuccess = ref(false)
+const lastFilledId = ref<number | null>(null)
+let suppressDirty = false
 
 watch(
   () => uploaderQuery.data.value,
   (data) => {
     if (!data) return
+    if (data.ID === lastFilledId.value && isDirty.value) return
+    lastFilledId.value = data.ID
+    suppressDirty = true
     bioHtml.value = data.Description ?? ''
     saveError.value = ''
     saveSuccess.value = false
+    void nextTick(() => {
+      suppressDirty = false
+      resetDirty()
+    })
   },
   { immediate: true },
 )
 
+watch(bioHtml, () => {
+  if (!suppressDirty) markDirty()
+})
+
 async function handleSave() {
   if (!targetUserId.value || isSaving.value) return
   isSaving.value = true
+  const uid = targetUserId.value
   saveError.value = ''
   saveSuccess.value = false
 
   try {
-    await updateUploaderProfile(targetUserId.value, {
-      Description: bioHtml.value,
+    await updateUploaderProfile(uid, {
+      Description: sanitizePackageHtml(bioHtml.value),
     })
-    await invalidateUploader(targetUserId.value)
+    await invalidateUploader(uid)
+    resetDirty()
     saveSuccess.value = true
   } catch (err) {
     saveError.value = formatApiErrorMessage(err, t, te)
@@ -70,7 +75,7 @@ async function handleSave() {
 </script>
 
 <template>
-  <div v-if="uploaderQuery.isPending.value">
+  <div v-if="uploaderQuery.isLoading.value">
     <FormPanel :title="t('settings.bio.panelTitle')">
       <div class="p-4 space-y-3">
         <Skeleton class="h-9 w-full rounded-none" />
@@ -85,7 +90,7 @@ async function handleSave() {
   >
     <p class="text-sm font-medium text-foreground">{{ t('uploader.notFoundTitle') }}</p>
     <p class="text-sm text-muted-foreground">
-      {{ uploaderQuery.error.value?.message || t('errors.network') }}
+      {{ formatApiErrorMessage(uploaderQuery.error.value, t, te) }}
     </p>
     <Button
       variant="outline"

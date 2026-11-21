@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Clock, Download, ExternalLink } from '@lucide/vue'
 import type { PackageFile } from '@/types/models'
-import { buildFileDownloadUrl, PLATFORM_ORDER } from '@/config/platforms'
-import { compareVersionsDesc } from '@/utils/version'
+import { buildFileDownloadUrl } from '@/config/platforms'
+import { sortPackageFiles } from '@/utils/package'
 import { usePreferencesStore } from '@/stores/preferences'
 import PlatformBadge from './PlatformBadge.vue'
 import { Button } from '@/components/ui/button'
@@ -30,14 +30,7 @@ const sortedFiles = computed(() => {
   const list = (props.files ?? []).filter((file) => !file.NeedValidation || file.Validated)
   if (list.length === 0) return []
 
-  const sorted = [...list].sort((a, b) => {
-    const cmp = compareVersionsDesc(a.Version, b.Version)
-    if (cmp !== 0) return cmp
-    const idxA = PLATFORM_ORDER.indexOf(a.Platform as (typeof PLATFORM_ORDER)[number])
-    const idxB = PLATFORM_ORDER.indexOf(b.Platform as (typeof PLATFORM_ORDER)[number])
-    if (idxA !== -1 && idxB !== -1 && idxA !== idxB) return idxA - idxB
-    return b.ID - a.ID
-  })
+  const sorted = sortPackageFiles(list)
 
   const highestVersion = sorted[0]?.Version ?? ''
 

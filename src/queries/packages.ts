@@ -47,8 +47,15 @@ export function usePackageCacheActions() {
     })
   }
 
+  function removePackageDetail(id: number) {
+    queryClient.removeQueries({
+      queryKey: packageKeys.detail(id),
+    })
+  }
+
   return {
     invalidatePackage,
     invalidatePackageLists,
+    removePackageDetail,
   }
 }

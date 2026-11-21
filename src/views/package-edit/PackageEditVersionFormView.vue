@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
-  ExternalLink,
   FolderOpen,
   Loader2,
   Save,
@@ -18,17 +17,17 @@ import FileCartonPickerDialog from '@/components/editor/FileCartonPickerDialog.v
 import FileAuditMenu from '@/components/admin/FileAuditMenu.vue'
 import { PLATFORMS, PLATFORM_ORDER } from '@/config/platforms'
 import { useAuthStore } from '@/stores/auth'
-import { usePreferencesStore } from '@/stores/preferences'
 import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/packages'
 import { useFileCacheActions } from '@/queries/files'
 import { createFile, updateFile } from '@/api/files'
 import { formatApiErrorMessage } from '@/api/auth'
-import { buildWikiDocUrl } from '@/api/portal'
 import {
   isValidEmailFormat,
   isValidPackageSizeFormat,
   isValidVersionFormat,
+  parsePositiveIntParam,
 } from '@/utils/format'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import { hasTrimIssues } from '@/utils/string3'
 import type { SaveFilePayload } from '@/types/models'
 import { Button } from '@/components/ui/button'
@@ -46,7 +45,6 @@ const route = useRoute()
 const router = useRouter()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
-const preferences = usePreferencesStore()
 const { invalidatePackage, invalidatePackageLists } = usePackageCacheActions()
 const { invalidateFiles } = useFileCacheActions()
 
@@ -59,9 +57,7 @@ const packageId = computed<number | null>(() => {
 const isCreateMode = computed(() => route.name === 'package-edit-version-new')
 const fileId = computed<number | null>(() => {
   if (isCreateMode.value) return null
-  const raw = String(route.params.fileId ?? '')
-  const num = Number.parseInt(raw, 10)
-  return Number.isInteger(num) && num > 0 ? num : null
+  return parsePositiveIntParam(route.params.fileId)
 })
 
 const packageQuery = usePackageDetailQuery(packageId)
@@ -87,35 +83,47 @@ const saveSuccess = ref(false)
 
 const revalidateWarningOpen = ref(false)
 
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
+let suppressDirty = false
+const lastFilledFileId = ref<number | string | null>(null)
+
 const isModerator = computed(() => authStore.privilege >= 10)
 const canManualEdit = computed(() => isModerator.value && manualOverride.value)
 
 watch(
-  [() => isCreateMode.value, existingFile, () => authStore.profile?.Email],
-  ([creating, file, userEmail]) => {
+  [() => isCreateMode.value, existingFile],
+  ([creating, file]) => {
+    const fillKey = creating ? 'create' : file?.ID ?? null
+    if (fillKey === lastFilledFileId.value && isDirty.value) return
+    lastFilledFileId.value = fillKey
+    suppressDirty = true
     submittedOnce.value = false
     saveError.value = ''
     saveSuccess.value = false
     if (creating) {
       platform.value = 'hmmsim'
       version.value = '1.0'
-      authEmail.value = userEmail ?? ''
+      authEmail.value = authStore.profile?.Email ?? ''
       storagePath.value = ''
       fileSize.value = ''
+    } else if (file) {
+      platform.value = file.Platform === 'openbve' ? 'openbve' : 'hmmsim'
+      version.value = file.Version ?? ''
+      authEmail.value = file.AuthParam ?? ''
+      storagePath.value = file.URLParam ?? ''
+      fileSize.value = file.Size ?? ''
+    } else {
+      suppressDirty = false
       return
     }
-    if (!file) return
-    platform.value = file.Platform === 'openbve' ? 'openbve' : 'hmmsim'
-    version.value = file.Version ?? ''
-    authEmail.value = file.AuthParam ?? ''
-    storagePath.value = file.URLParam ?? ''
-    fileSize.value = file.Size ?? ''
+    void nextTick(() => { suppressDirty = false; resetDirty() })
   },
   { immediate: true },
 )
 
-const fileFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'filefields'),
+watch(
+  [platform, version, authEmail, storagePath, fileSize],
+  () => { if (!suppressDirty) markDirty() },
 )
 
 const hasConflict = computed(() => {
@@ -168,7 +176,9 @@ const fileSizeError = computed(() => {
 
 function handlePickerSelect(picked: { path: string; size: string }) {
   storagePath.value = picked.path
-  fileSize.value = picked.size
+  if (picked.size) {
+    fileSize.value = picked.size
+  }
   saveError.value = ''
   saveSuccess.value = false
 }
@@ -176,8 +186,12 @@ function handlePickerSelect(picked: { path: string; size: string }) {
 async function performSave() {
   if (!packageId.value || isSaving.value) return
 
+  const pkgId = packageId.value
+  const fId = fileId.value
+  const wasCreateMode = isCreateMode.value
+
   const payload: SaveFilePayload = {
-    PackageID: packageId.value,
+    PackageID: pkgId,
     Platform: platform.value,
     Version: version.value.trim(),
     Size: fileSize.value.trim(),
@@ -190,15 +204,19 @@ async function performSave() {
   saveError.value = ''
   saveSuccess.value = false
   try {
-    if (isCreateMode.value) {
+    if (wasCreateMode) {
       await createFile(payload)
-      await invalidatePackage(packageId.value)
+      resetDirty()
+      await invalidatePackage(pkgId)
       await invalidatePackageLists()
       await invalidateFiles()
-      await router.replace(`/packages/${packageId.value}/edit/versions`)
-    } else if (fileId.value) {
-      await updateFile(fileId.value, payload)
-      await invalidatePackage(packageId.value)
+      if (route.name === 'package-edit-version-new' && String(route.params.id) === String(pkgId)) {
+        await router.replace(`/packages/${pkgId}/edit/versions`)
+      }
+    } else if (fId) {
+      await updateFile(fId, payload)
+      resetDirty()
+      await invalidatePackage(pkgId)
       await invalidatePackageLists()
       await invalidateFiles()
       revalidateWarningOpen.value = false
@@ -240,7 +258,6 @@ function handleSubmit() {
 
 function handleAuditUpdated() {
   saveError.value = ''
-  saveSuccess.value = true
 }
 
 function handleAuditDeleted() {

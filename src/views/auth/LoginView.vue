@@ -6,13 +6,10 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { AlertCircle, Eye, EyeOff, Loader2, LogIn } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
 import FormRow from '@/components/form/FormRow.vue'
-import { loginApi, formatApiErrorMessage } from '@/api/auth'
-import { bareApiClient } from '@/api/client'
-import { decodeJwtPayload, useAuthStore } from '@/stores/auth'
-import { uploaderKeys } from '@/queries/uploaders'
+import { loginApi, setupSessionFromToken, formatApiErrorMessage } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 import { resolveSafeRedirect } from '@/router'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
-import type { UploaderDetail } from '@/types/models'
 import { Button } from '@/components/ui/button'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -57,28 +54,16 @@ async function handleSubmit() {
   }
 
   isSubmitting.value = true
+  const target = resolveSafeRedirect(route.query.redirect)
   try {
     const tokenRes = await loginApi({
       username: email.value.trim(),
       password: password.value,
     })
-
-    const payload = decodeJwtPayload(tokenRes.token)
-    if (!payload?.uid) {
-      throw new Error('Invalid JWT payload')
+    await setupSessionFromToken(tokenRes.token, authStore, queryClient)
+    if (router.currentRoute.value.name === 'login') {
+      await router.replace(target)
     }
-
-    const uploader = await bareApiClient<UploaderDetail>(`/uploaders/${payload.uid}`, {
-      headers: {
-        Authorization: `Bearer ${tokenRes.token}`,
-      },
-    })
-
-    authStore.setSession(tokenRes.token, uploader)
-    queryClient.setQueryData(uploaderKeys.detail(payload.uid), uploader)
-
-    const target = resolveSafeRedirect(route.query.redirect)
-    await router.replace(target)
   } catch (err) {
     serverError.value = formatApiErrorMessage(err, t, te)
   } finally {
@@ -186,7 +171,7 @@ watchEffect(() => {
     <p class="mt-4 text-center text-sm text-muted-foreground">
       <span>{{ t('auth.noAccountPrompt') }}</span>
       <router-link
-        to="/auth/register"
+        :to="{ name: 'register', query: route.query.redirect ? { redirect: route.query.redirect } : undefined }"
         class="ml-1.5 font-medium text-primary hover:underline underline-offset-4"
       >
         {{ t('auth.goRegister') }}

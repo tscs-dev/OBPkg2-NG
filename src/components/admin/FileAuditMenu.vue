@@ -55,6 +55,7 @@ const { invalidatePackage, invalidatePackageLists } = usePackageCacheActions()
 const validateDialogOpen = ref(false)
 const isValidating = ref(false)
 const validateError = ref('')
+const targetValidatedValue = ref(false)
 
 const rejectDialogOpen = ref(false)
 const rejectReasonDraft = ref('')
@@ -66,6 +67,7 @@ const isDeleting = ref(false)
 const deleteError = ref('')
 
 function openValidateConfirm() {
+  targetValidatedValue.value = !props.file.Validated
   validateError.value = ''
   validateDialogOpen.value = true
 }
@@ -87,7 +89,7 @@ async function confirmToggleValidation() {
   validateError.value = ''
   try {
     const updated = await updateFile(props.file.ID, {
-      Validated: !props.file.Validated,
+      Validated: targetValidatedValue.value,
     })
     validateDialogOpen.value = false
     await invalidateFiles()
@@ -224,7 +226,12 @@ defineExpose({
 
   <!-- 切换验证状态确认 -->
   <Dialog v-model:open="validateDialogOpen">
-    <DialogContent class="max-w-md rounded-none">
+    <DialogContent
+      class="max-w-md rounded-none"
+      :show-close-button="!isValidating"
+      @interact-outside="(e: Event) => { if (isValidating) e.preventDefault() }"
+      @escape-key-down="(e: Event) => { if (isValidating) e.preventDefault() }"
+    >
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('adminFiles.validateConfirmTitle') }}</DialogTitle>
         <DialogDescription class="text-sm leading-relaxed">
@@ -263,7 +270,12 @@ defineExpose({
 
   <!-- 设置退回原因对话框 -->
   <Dialog v-model:open="rejectDialogOpen">
-    <DialogContent class="max-w-md rounded-none">
+    <DialogContent
+      class="max-w-md rounded-none"
+      :show-close-button="!isSavingReject"
+      @interact-outside="(e: Event) => { if (isSavingReject) e.preventDefault() }"
+      @escape-key-down="(e: Event) => { if (isSavingReject) e.preventDefault() }"
+    >
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('adminFiles.actions.setRejectReason') }}</DialogTitle>
         <DialogDescription class="text-sm leading-relaxed">
@@ -310,7 +322,12 @@ defineExpose({
 
   <!-- 删除文件确认 -->
   <Dialog v-model:open="deleteDialogOpen">
-    <DialogContent class="max-w-md rounded-none">
+    <DialogContent
+      class="max-w-md rounded-none"
+      :show-close-button="!isDeleting"
+      @interact-outside="(e: Event) => { if (isDeleting) e.preventDefault() }"
+      @escape-key-down="(e: Event) => { if (isDeleting) e.preventDefault() }"
+    >
       <DialogHeader>
         <DialogTitle class="text-base">{{ t('packageEdit.versions.deleteConfirmTitle') }}</DialogTitle>
         <DialogDescription class="text-sm leading-relaxed">

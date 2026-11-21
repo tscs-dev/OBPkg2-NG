@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQueries } from '@tanstack/vue-query'
@@ -24,6 +24,7 @@ import { useFilesQuery } from '@/queries/files'
 import { packageKeys } from '@/queries/packages'
 import { fetchPackageDetail } from '@/api/packages'
 import type { FilePlatformFilter, FileValidationFilter } from '@/api/files'
+import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import type { PackageDetail } from '@/types/models'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,7 @@ const PAGE_SIZE = 20
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
@@ -104,7 +105,19 @@ const filesQuery = useFilesQuery(
 
 const items = computed(() => filesQuery.data.value?.items ?? [])
 const total = computed(() => filesQuery.data.value?.total ?? 0)
+const filesErrorMessage = computed(() =>
+  filesQuery.error.value ? formatApiErrorMessage(filesQuery.error.value, t, te) : '',
+)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
+
+watch(
+  [totalPages, () => filesQuery.data.value],
+  ([tp, data]) => {
+    if (data && page.value > tp) {
+      updateFilters({ page: tp })
+    }
+  },
+)
 
 // 并发解析当前页关联作品名称并复用缓存
 const uniquePackageIds = computed(() => {
@@ -351,7 +364,7 @@ watchEffect(() => {
         >
           <p class="text-sm font-medium text-foreground">{{ t('adminFiles.errorTitle') }}</p>
           <p class="text-sm text-muted-foreground">
-            {{ filesQuery.error.value?.message || t('errors.network') }}
+            {{ filesErrorMessage || t('errors.network') }}
           </p>
           <Button
             variant="outline"
@@ -484,6 +497,7 @@ watchEffect(() => {
                       type="button"
                       size="xs"
                       class="rounded-none cursor-pointer"
+                      :disabled="filesQuery.isPlaceholderData.value"
                       @click="auditMenuRefs[file.ID]?.openValidateConfirm()"
                     >
                       <Check class="size-3" />

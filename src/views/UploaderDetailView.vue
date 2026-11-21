@@ -21,6 +21,7 @@ import ImageLightbox, { type LightboxImageItem } from '@/components/common/Image
 import { useUploaderDetailQuery } from '@/queries/uploaders'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
+import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
@@ -41,7 +42,7 @@ const PAGE_SIZE = 20
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const preferences = usePreferencesStore()
 const authStore = useAuthStore()
 const { setBreadcrumb } = useBreadcrumbState()
@@ -56,6 +57,9 @@ const uploaderId = computed<number | null>(() => {
 
 const uploaderQuery = useUploaderDetailQuery(uploaderId)
 const uploader = computed(() => uploaderQuery.data.value ?? null)
+const uploaderErrorMessage = computed(() =>
+  uploaderQuery.error.value ? formatApiErrorMessage(uploaderQuery.error.value, t, te) : '',
+)
 
 const primaryName = computed(() => {
   if (!uploader.value) return ''
@@ -239,9 +243,16 @@ const totalPages = computed(() =>
   Math.max(1, Math.ceil(filteredPackages.value.length / PAGE_SIZE)),
 )
 
+watch(totalPages, (tp) => {
+  if (currentPage.value > tp) {
+    currentPage.value = tp
+  }
+})
+
+const displayPage = computed(() => Math.min(currentPage.value, totalPages.value))
+
 const pagedPackages = computed(() => {
-  const safePage = Math.min(currentPage.value, totalPages.value)
-  const start = (safePage - 1) * PAGE_SIZE
+  const start = (displayPage.value - 1) * PAGE_SIZE
   return filteredPackages.value.slice(start, start + PAGE_SIZE)
 })
 
@@ -303,7 +314,7 @@ watchEffect(() => {
           {{ uploaderId === null ? t('uploader.invalidIdTitle') : t('uploader.notFoundTitle') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-          {{ uploaderQuery.error.value?.message || t('errors.notFound') }}
+          {{ uploaderErrorMessage || t('errors.notFound') }}
         </p>
         <div class="flex items-center gap-2 pt-1">
           <Button as-child variant="outline" size="sm" class="rounded-none">
@@ -497,14 +508,14 @@ watchEffect(() => {
                   class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
                 >
                   <span class="text-muted-foreground">
-                    {{ t('packages.paginationPage', { page: currentPage, totalPages }) }}
+                    {{ t('packages.paginationPage', { page: displayPage, totalPages }) }}
                   </span>
                   <div class="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       class="rounded-none h-8 px-2.5 cursor-pointer"
-                      :disabled="currentPage <= 1"
+                      :disabled="displayPage <= 1"
                       @click="currentPage -= 1"
                     >
                       <ChevronLeft class="size-3.5" />
@@ -514,7 +525,7 @@ watchEffect(() => {
                       variant="outline"
                       size="sm"
                       class="rounded-none h-8 px-2.5 cursor-pointer"
-                      :disabled="currentPage >= totalPages"
+                      :disabled="displayPage >= totalPages"
                       @click="currentPage += 1"
                     >
                       <span>{{ t('packages.paginationNext') }}</span>
@@ -595,14 +606,14 @@ watchEffect(() => {
                   class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
                 >
                   <span class="text-muted-foreground">
-                    {{ t('packages.paginationPage', { page: currentPage, totalPages }) }}
+                    {{ t('packages.paginationPage', { page: displayPage, totalPages }) }}
                   </span>
                   <div class="flex items-center gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       class="rounded-none h-8 px-2.5 cursor-pointer"
-                      :disabled="currentPage <= 1"
+                      :disabled="displayPage <= 1"
                       @click="currentPage -= 1"
                     >
                       <ChevronLeft class="size-3.5" />
@@ -612,7 +623,7 @@ watchEffect(() => {
                       variant="outline"
                       size="sm"
                       class="rounded-none h-8 px-2.5 cursor-pointer"
-                      :disabled="currentPage >= totalPages"
+                      :disabled="displayPage >= totalPages"
                       @click="currentPage += 1"
                     >
                       <span>{{ t('packages.paginationNext') }}</span>

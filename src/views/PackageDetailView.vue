@@ -23,6 +23,7 @@ import ImageLightbox, { type LightboxImageItem } from '@/components/common/Image
 import { usePackageDetailQuery } from '@/queries/packages'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
+import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
@@ -41,7 +42,7 @@ type DetailTab = 'description' | 'downloads' | 'comments'
 
 const route = useRoute()
 const router = useRouter()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
 const { setBreadcrumb } = useBreadcrumbState()
@@ -69,6 +70,9 @@ const tabsAnchorRef = ref<HTMLElement | null>(null)
 
 const detailQuery = usePackageDetailQuery(packageId)
 const pkg = computed(() => detailQuery.data.value ?? null)
+const detailErrorMessage = computed(() =>
+  detailQuery.error.value ? formatApiErrorMessage(detailQuery.error.value, t, te) : '',
+)
 
 const primaryName = computed(() => {
   if (!pkg.value) return ''
@@ -119,10 +123,17 @@ const commentIframeSrc = computed(() => {
 const commentIframeHeight = ref(300)
 const commentIframeLoaded = ref(false)
 
+const COMMENT_ORIGIN = 'https://bvecs.zbx1425.cn'
+const MAX_IFRAME_HEIGHT = 10000
+
 function handleCommentMessage(e: MessageEvent) {
+  if (e.origin !== COMMENT_ORIGIN) return
   if (e.data && e.data.type === 'bcs-ugc-height' && typeof e.data.height === 'number') {
-    commentIframeHeight.value = e.data.height
-    commentIframeLoaded.value = true
+    const h = e.data.height
+    if (Number.isFinite(h) && h > 0 && h <= MAX_IFRAME_HEIGHT) {
+      commentIframeHeight.value = h
+      commentIframeLoaded.value = true
+    }
   }
 }
 
@@ -138,6 +149,11 @@ watch(activeTab, (tab) => {
   if (tab !== 'comments') {
     commentIframeLoaded.value = false
   }
+})
+
+watch(commentIframeSrc, () => {
+  commentIframeLoaded.value = false
+  commentIframeHeight.value = 300
 })
 
 // 缩略图及描述中图片点击放大灯箱（支持多图翻页）
@@ -233,7 +249,7 @@ watchEffect(() => {
           {{ packageId === null ? t('detail.invalidIdTitle') : t('detail.notFoundTitle') }}
         </h1>
         <p class="text-sm text-muted-foreground">
-          {{ detailQuery.error.value?.message || t('errors.notFound') }}
+          {{ detailErrorMessage || t('errors.notFound') }}
         </p>
         <div class="flex items-center gap-2 pt-1">
           <Button as-child variant="outline" size="sm" class="rounded-none">

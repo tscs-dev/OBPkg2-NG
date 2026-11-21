@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ComponentPublicInstance, computed, ref, watch } from 'vue'
+import { type ComponentPublicInstance, computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
@@ -8,6 +8,8 @@ import RichTextEditor from '@/components/editor/RichTextEditor.vue'
 import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/packages'
 import { updatePackage } from '@/api/packages'
 import { formatApiErrorMessage } from '@/api/auth'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
+import { sanitizePackageHtml } from '@/utils/sanitize'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
@@ -29,29 +31,42 @@ const descriptionHtml = ref('')
 const isSaving = ref(false)
 const saveError = ref('')
 const saveSuccess = ref(false)
+const lastFilledId = ref<number | null>(null)
+let suppressDirty = false
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
 watch(
   () => packageQuery.data.value,
   (data) => {
     if (!data) return
+    if (data.ID === lastFilledId.value && isDirty.value) return
+    lastFilledId.value = data.ID
+    suppressDirty = true
     descriptionHtml.value = data.Description ?? ''
     saveError.value = ''
     saveSuccess.value = false
+    void nextTick(() => { suppressDirty = false; resetDirty() })
   },
   { immediate: true },
 )
 
+watch(descriptionHtml, () => {
+  if (!suppressDirty) markDirty()
+})
+
 async function handleSave() {
   if (!packageId.value || isSaving.value) return
   isSaving.value = true
+  const pkgId = packageId.value
   saveError.value = ''
   saveSuccess.value = false
 
   try {
-    await updatePackage(packageId.value, {
-      Description: descriptionHtml.value,
+    await updatePackage(pkgId, {
+      Description: sanitizePackageHtml(descriptionHtml.value),
     })
-    await invalidatePackage(packageId.value)
+    resetDirty()
+    await invalidatePackage(pkgId)
     saveSuccess.value = true
   } catch (err) {
     saveError.value = formatApiErrorMessage(err, t, te)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -17,6 +17,7 @@ import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
 import { usePackagesQuery } from '@/queries/packages'
 import type { PlatformFilter } from '@/api/packages'
 import { useAuthStore } from '@/stores/auth'
+import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,7 +33,7 @@ const PAGE_SIZE = 20
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
 const { setBreadcrumb } = useBreadcrumbState()
 usePageBreadcrumbCleanup()
@@ -114,7 +115,19 @@ const packagesQuery = usePackagesQuery(
 
 const items = computed(() => packagesQuery.data.value?.items ?? [])
 const total = computed(() => packagesQuery.data.value?.total ?? 0)
+const packagesErrorMessage = computed(() =>
+  packagesQuery.error.value ? formatApiErrorMessage(packagesQuery.error.value, t, te) : '',
+)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)))
+
+watch(
+  [totalPages, () => packagesQuery.data.value],
+  ([tp, data]) => {
+    if (data && page.value > tp) {
+      updateFilters({ page: tp })
+    }
+  },
+)
 
 const displayStart = computed(() =>
   total.value === 0 ? 0 : (page.value - 1) * PAGE_SIZE + 1,
@@ -277,7 +290,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             {{ t('packages.errorTitle') }}
           </p>
           <p class="text-sm text-muted-foreground">
-            {{ packagesQuery.error.value?.message || t('errors.network') }}
+            {{ packagesErrorMessage || t('errors.network') }}
           </p>
           <Button
             variant="outline"

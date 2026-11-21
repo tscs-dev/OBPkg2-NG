@@ -33,8 +33,12 @@ watchEffect(() => {
 })
 
 // 两栏公告：面向用户 (bcs-doc:status) & 面向创作者 (bcs-doc:ann-uploader)
-const userAnnQuery = useWikiDocQuery('zh-CN', 'status')
-const uploaderAnnQuery = useWikiDocQuery('zh-CN', 'ann-uploader')
+// 优先使用用户语言，非中文时 fallback 到 zh-CN
+const annLocale = computed(() => preferences.locale as 'zh-CN' | 'en' | 'ja')
+const userAnnQuery = useWikiDocQuery(annLocale, 'status')
+const uploaderAnnQuery = useWikiDocQuery(annLocale, 'ann-uploader')
+const userAnnFallbackQuery = useWikiDocQuery('zh-CN', 'status')
+const uploaderAnnFallbackQuery = useWikiDocQuery('zh-CN', 'ann-uploader')
 
 // 最近更新包列表（前 6 条可下载包）
 const recentQuery = usePackagesQuery({
@@ -50,9 +54,28 @@ const numberFormatter = computed(
   () => new Intl.NumberFormat(preferences.locale),
 )
 
-const userAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'status'))
-const uploaderAnnUrl = computed(() => buildWikiDocUrl('zh-CN', 'ann-uploader'))
-const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale, 'start'))
+function resolveAnnQuery(
+  primary: typeof userAnnQuery,
+  fallback: typeof userAnnFallbackQuery,
+) {
+  if (annLocale.value === 'zh-CN') return primary
+  if (!primary.isSuccess.value) return primary
+  if (!primary.data.value?.isEmpty) return primary
+  return fallback
+}
+
+const effectiveUserAnnQuery = computed(() => resolveAnnQuery(userAnnQuery, userAnnFallbackQuery))
+const effectiveUploaderAnnQuery = computed(() => resolveAnnQuery(uploaderAnnQuery, uploaderAnnFallbackQuery))
+
+const userAnnUrl = computed(() => {
+  const q = effectiveUserAnnQuery.value
+  return q.data.value?.sourceUrl ?? buildWikiDocUrl(annLocale.value, 'status')
+})
+const uploaderAnnUrl = computed(() => {
+  const q = effectiveUploaderAnnQuery.value
+  return q.data.value?.sourceUrl ?? buildWikiDocUrl(annLocale.value, 'ann-uploader')
+})
+const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale as 'zh-CN' | 'en' | 'ja', 'start'))
 
 const announcementCards = computed(() => [
   {
@@ -60,14 +83,14 @@ const announcementCards = computed(() => [
     title: t('home.userAnnouncements'),
     icon: Megaphone,
     url: userAnnUrl.value,
-    query: userAnnQuery,
+    query: effectiveUserAnnQuery.value,
   },
   {
     key: 'uploader',
     title: t('home.uploaderAnnouncements'),
     icon: Wrench,
     url: uploaderAnnUrl.value,
-    query: uploaderAnnQuery,
+    query: effectiveUploaderAnnQuery.value,
   },
 ])
 </script>

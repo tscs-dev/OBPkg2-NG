@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { bareApiClient } from '@/api/client'
+import { bareApiClient, normalizeApiError } from '@/api/client'
 import type { PackageSummary, TokenResponse, Uploader } from '@/types/models'
 
 export const TOKEN_STORAGE_KEY = 'JWT_TOKEN'
@@ -82,6 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
   let refreshTimerId: number | null = null
   let lifecycleBound = false
   let sessionExpiryHandler: (() => void) | null = null
+  let storageLogoutHandler: (() => void) | null = null
 
   const isLoggedIn = computed(() => {
     if (!token.value || !profile.value) return false
@@ -181,6 +182,10 @@ export const useAuthStore = defineStore('auth', () => {
     sessionExpiryHandler = handler
   }
 
+  function registerStorageLogoutHandler(handler: () => void) {
+    storageLogoutHandler = handler
+  }
+
   function getFreshTokenFromStorage(failedToken: string | null): string | null {
     const stored = readStoredToken()
     if (!stored || stored === failedToken) return null
@@ -219,14 +224,28 @@ export const useAuthStore = defineStore('auth', () => {
             Authorization: `Bearer ${latestStored}`,
           },
         })
+        // await 后重读 storage，防止其他标签页登出/切换账号
+        const currentStored = readStoredToken()
+        if (currentStored !== latestStored) {
+          return currentStored
+        }
         if (res?.token) {
           persistToken(res.token)
           return res.token
         }
         return latestStored
-      } catch {
-        expireSession()
-        return null
+      } catch (err) {
+        const currentStored = readStoredToken()
+        if (currentStored !== latestStored) {
+          return currentStored
+        }
+        const apiErr = normalizeApiError(err)
+        if (apiErr.status === 401 || apiErr.code === 211) {
+          expireSession()
+          return null
+        }
+        // 网络/5xx 错误：保留未过期的 token
+        return isTokenExpired(latestStored) ? null : latestStored
       }
     }
 
@@ -265,6 +284,7 @@ export const useAuthStore = defineStore('auth', () => {
         clearRefreshTimer()
         token.value = null
         profile.value = null
+        storageLogoutHandler?.()
       } else {
         token.value = nextToken
         sessionExpiredNotice.value = false
@@ -284,6 +304,7 @@ export const useAuthStore = defineStore('auth', () => {
       clearRefreshTimer()
       token.value = null
       profile.value = null
+      storageLogoutHandler?.()
     }
   }
 
@@ -338,6 +359,7 @@ export const useAuthStore = defineStore('auth', () => {
     expireSession,
     dismissExpiredNotice,
     registerSessionExpiryHandler,
+    registerStorageLogoutHandler,
     getFreshTokenFromStorage,
     ensureValidToken,
     initSessionLifecycle,

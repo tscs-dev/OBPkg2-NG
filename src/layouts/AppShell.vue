@@ -61,7 +61,7 @@ const displayUsername = computed(() => {
 
 const loginLocation = computed(() => {
   if (route.path.startsWith('/auth/')) {
-    return { name: 'login' as const }
+    return { name: 'login' as const, query: route.query }
   }
   return {
     name: 'login' as const,

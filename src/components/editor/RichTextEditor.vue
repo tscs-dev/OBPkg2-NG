@@ -96,6 +96,7 @@ const SimpleImage = Node.create({
 
 const isSourceMode = ref(false)
 const sourceHtml = ref(props.modelValue)
+const editorTick = ref(0)
 
 const linkPopoverOpen = ref(false)
 const imageUrlPopoverOpen = ref(false)
@@ -146,9 +147,10 @@ const editor = useEditor({
 
       event.preventDefault()
       const coords = view.posAtCoords({ left: event.clientX, top: event.clientY })
-      const dropPos = coords?.pos
+      let dropPos = coords?.pos
       for (const file of images) {
         startImageUpload(file, dropPos)
+        if (dropPos != null) dropPos += 1
       }
       isDraggingOver.value = false
       return true
@@ -166,13 +168,22 @@ const editor = useEditor({
       return true
     },
   },
+  onSelectionUpdate() {
+    editorTick.value++
+  },
   onUpdate({ editor: instance }) {
+    editorTick.value++
     const html = instance.getHTML()
     const normalized = html === '<p></p>' ? '' : html
     sourceHtml.value = normalized
     emit('update:modelValue', normalized)
   },
 })
+
+function isActive(name: string, options?: Record<string, unknown>): boolean {
+  void editorTick.value
+  return editor.value?.isActive(name, options) ?? false
+}
 
 /* ---------- upload state ---------- */
 
@@ -380,7 +391,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 px-2 inline-flex items-center justify-center text-xs transition-colors cursor-pointer"
-          :class="editor.isActive('paragraph') ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('paragraph') ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.paragraph')"
           :disabled="disabled"
           @click="editor.chain().focus().setParagraph().run()"
@@ -390,7 +401,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 px-2 inline-flex items-center justify-center text-xs transition-colors cursor-pointer"
-          :class="editor.isActive('heading', { level: 2 }) ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('heading', { level: 2 }) ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.heading2')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
@@ -400,7 +411,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 px-2 inline-flex items-center justify-center text-xs transition-colors cursor-pointer"
-          :class="editor.isActive('heading', { level: 3 }) ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('heading', { level: 3 }) ? 'bg-primary/12 text-primary font-semibold' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.heading3')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
@@ -414,7 +425,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('bold') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('bold') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.bold')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleBold().run()"
@@ -424,7 +435,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('italic') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('italic') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.italic')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleItalic().run()"
@@ -434,7 +445,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('underline') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('underline') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.underline')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleUnderline().run()"
@@ -444,7 +455,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('strike') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('strike') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.strike')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleStrike().run()"
@@ -454,7 +465,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('code') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('code') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.inlineCode')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleCode().run()"
@@ -468,7 +479,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('bulletList') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('bulletList') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.bulletList')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleBulletList().run()"
@@ -478,7 +489,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('orderedList') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('orderedList') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.orderedList')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleOrderedList().run()"
@@ -488,7 +499,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-          :class="editor.isActive('blockquote') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+          :class="isActive('blockquote') ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
           :title="t('editor.blockquote')"
           :disabled="disabled"
           @click="editor.chain().focus().toggleBlockquote().run()"
@@ -512,7 +523,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="h-7 w-7 inline-flex items-center justify-center transition-colors cursor-pointer"
-            :class="editor.isActive('link') || linkPopoverOpen ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
+            :class="isActive('link') || linkPopoverOpen ? 'bg-primary/12 text-primary' : 'text-foreground/80 hover:bg-muted'"
             :title="t('editor.link')"
             :disabled="disabled"
           >
@@ -674,6 +685,7 @@ onBeforeUnmount(() => {
       <EditorContent :editor="editor" />
       <LinkBubbleMenu
         :editor="editor"
+        :editor-tick="editorTick"
         :link-popover-open="linkPopoverOpen"
         @edit-link="handleEditLinkFromBubble"
       />

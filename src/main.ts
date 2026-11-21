@@ -41,6 +41,13 @@ authStore.registerSessionExpiryHandler(() => {
   }
 })
 
+authStore.registerStorageLogoutHandler(() => {
+  const current = router.currentRoute.value
+  if (current.meta.requiresAuth) {
+    void router.replace({ name: 'home' })
+  }
+})
+
 configureApiAuthHooks({
   getToken: () => authStore.token,
   ensureValidToken: () => authStore.ensureValidToken(),

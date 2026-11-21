@@ -89,8 +89,16 @@ function handleRemove() {
       </template>
 
       <template v-else>
-        <Loader2 class="size-4 animate-spin text-muted-foreground shrink-0" />
-        <span class="text-muted-foreground">{{ t('editor.uploading') }}</span>
+        <AlertCircle class="size-4 text-muted-foreground shrink-0" />
+        <span class="text-muted-foreground">{{ t('editor.uploadOrphan') }}</span>
+        <button
+          type="button"
+          class="ml-auto h-6 px-2 inline-flex items-center gap-1 text-xs text-destructive hover:bg-destructive/10 transition-colors cursor-pointer shrink-0"
+          @click.stop="handleRemove"
+        >
+          <Trash2 class="size-3" />
+          {{ t('editor.removeUpload') }}
+        </button>
       </template>
     </div>
   </NodeViewWrapper>

@@ -7,6 +7,7 @@ import type { Editor } from '@tiptap/vue-3'
 
 const props = defineProps<{
   editor: Editor
+  editorTick: number
   linkPopoverOpen: boolean
 }>()
 
@@ -17,6 +18,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const linkHref = computed(() => {
+  void props.editorTick
   return (props.editor.getAttributes('link').href as string) ?? ''
 })
 
@@ -33,8 +35,9 @@ function shouldShow({ editor: e }: any) {
 }
 
 function openLink() {
-  if (linkHref.value) {
-    window.open(linkHref.value, '_blank', 'noopener')
+  const href = props.editor.getAttributes('link').href as string
+  if (href) {
+    window.open(href, '_blank', 'noopener')
   }
 }
 

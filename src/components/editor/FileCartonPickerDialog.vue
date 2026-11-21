@@ -38,13 +38,16 @@ const iframeRef = ref<HTMLIFrameElement | null>(null)
 const isLoading = ref(true)
 const errorNotice = ref('')
 let authDispatched = false
+let openGen = 0
 
 async function sendJwtToIframe() {
   if (authDispatched) return
+  const gen = openGen
   const targetWindow = iframeRef.value?.contentWindow
   if (!targetWindow) return
 
   const jwt = await authStore.ensureValidToken()
+  if (gen !== openGen || !props.open) return
   if (!jwt) {
     errorNotice.value = t('nav.sessionExpiredBanner')
     return
@@ -79,7 +82,9 @@ function handleWindowMessage(event: MessageEvent) {
       return
     }
     const path = normalizeStoragePath(picked.path)
-    const size = formatBytesToPackageSize(typeof picked.size === 'number' ? picked.size : 0)
+    const size = typeof picked.size === 'number' && picked.size > 0
+      ? formatBytesToPackageSize(picked.size)
+      : ''
     emit('select', { path, size })
     emit('update:open', false)
   }
@@ -89,6 +94,7 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
+      openGen++
       isLoading.value = true
       errorNotice.value = ''
       authDispatched = false

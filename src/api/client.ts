@@ -6,18 +6,21 @@ export class ApiError extends Error {
   status: number | undefined
   code: number | undefined
   data: string | number | undefined
+  isNetworkError: boolean
 
   constructor(
     message: string,
     status?: number,
     code?: number,
     data?: string | number,
+    isNetworkError = false,
   ) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
     this.data = data
+    this.isNetworkError = isNetworkError
   }
 }
 
@@ -34,14 +37,27 @@ export function configureApiAuthHooks(hooks: AuthClientHooks) {
   authHooks = hooks
 }
 
-function isAuthEndpoint(request: RequestInfo): boolean {
+const PUBLIC_AUTH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/check_token',
+  '/auth/activate',
+  '/auth/refresh_token',
+]
+
+function isPublicAuthEndpoint(request: RequestInfo): boolean {
   const url = typeof request === 'string' ? request : request.url
-  return url.includes('/auth/')
+  return PUBLIC_AUTH_PATHS.some((path) => url.includes(path))
 }
 
 function isIdempotentMethod(method?: string): boolean {
   const m = (method ?? 'GET').toUpperCase()
   return m === 'GET' || m === 'HEAD'
+}
+
+function isSessionExpiredError(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return false
+  return err.code === 211 || (err.status === 401 && !err.code)
 }
 
 export const bareApiClient = ofetch.create({
@@ -65,7 +81,7 @@ export const bareApiClient = ofetch.create({
   },
 })
 
-export const apiClient = ofetch.create({
+const _apiClientBase = ofetch.create({
   baseURL: ENV.apiRootUrl,
   timeout: 20_000,
   async onRequest({ request, options }) {
@@ -75,7 +91,7 @@ export const apiClient = ofetch.create({
     }
 
     if (!headers.has('Authorization') && authHooks) {
-      const token = isAuthEndpoint(request)
+      const token = isPublicAuthEndpoint(request)
         ? authHooks.getToken()
         : await authHooks.ensureValidToken()
       if (token) {
@@ -88,31 +104,18 @@ export const apiClient = ofetch.create({
   async onResponseError({ request, response, options }) {
     const payload = response._data as BackendErrorPayload | undefined
     const code = payload?.ErrorCode
-    const isAuthFailure = response.status === 401 || code === 211
+    const isExpired = code === 211 || (response.status === 401 && !code)
 
-    if (isAuthFailure && !isAuthEndpoint(request) && authHooks) {
+    if (isExpired && !isPublicAuthEndpoint(request) && authHooks) {
       const reqHeaders = new Headers(options.headers)
       const authHeader = reqHeaders.get('Authorization')
       const usedToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-      const alreadyRetried = reqHeaders.get('X-OBPkg-Retried') === '1'
 
-      // 仅对幂等 GET/HEAD 且检测到其他标签页已写入更新的有效 Token 时静默重试 1 次
-      if (!alreadyRetried && isIdempotentMethod(options.method)) {
-        const freshToken = authHooks.getFreshTokenFromStorage(usedToken)
-        if (freshToken) {
-          reqHeaders.set('Authorization', `Bearer ${freshToken}`)
-          reqHeaders.set('X-OBPkg-Retried', '1')
-          options.headers = reqHeaders
-          const retriedData = await apiClient(request, {
-            ...options,
-            headers: reqHeaders,
-          })
-          response._data = retriedData
-          return
-        }
+      const freshToken = authHooks.getFreshTokenFromStorage(usedToken)
+      if (!freshToken) {
+        authHooks.onSessionExpired()
       }
-
-      authHooks.onSessionExpired()
+      // freshToken 存在时: 内存已同步，不过期; 外层 wrapper 处理 GET/HEAD 重试
     }
 
     throw new ApiError(
@@ -124,15 +127,61 @@ export const apiClient = ofetch.create({
   },
 })
 
+function canRetryWithFreshToken(
+  err: unknown,
+  options?: { method?: string; headers?: HeadersInit },
+): boolean {
+  if (!isSessionExpiredError(err)) return false
+  if (!isIdempotentMethod(options?.method)) return false
+  if (!authHooks?.getToken()) return false
+  const headers = new Headers(options?.headers)
+  return headers.get('X-OBPkg-Retried') !== '1'
+}
+
+function withRetryHeaders(original?: HeadersInit): HeadersInit {
+  const headers = new Headers(original)
+  headers.set('Authorization', `Bearer ${authHooks!.getToken()!}`)
+  headers.set('X-OBPkg-Retried', '1')
+  return headers
+}
+
+type ClientOptions = Parameters<typeof _apiClientBase>[1]
+
+async function _apiFetch<T = unknown>(url: string, options?: ClientOptions): Promise<T> {
+  try {
+    return await _apiClientBase<T>(url, options as any)
+  } catch (err) {
+    if (canRetryWithFreshToken(err, options)) {
+      return _apiClientBase<T>(url, { ...options, headers: withRetryHeaders(options?.headers) } as any)
+    }
+    throw err
+  }
+}
+
+_apiFetch.raw = async function <T = unknown>(url: string, options?: ClientOptions) {
+  try {
+    return await _apiClientBase.raw<T>(url, options as any)
+  } catch (err) {
+    if (canRetryWithFreshToken(err, options)) {
+      return _apiClientBase.raw<T>(url, { ...options, headers: withRetryHeaders(options?.headers) } as any)
+    }
+    throw err
+  }
+}
+
+export const apiClient: typeof _apiClientBase = _apiFetch as any
+
 export function normalizeApiError(err: unknown): ApiError {
   if (err instanceof ApiError) return err
   if (err instanceof FetchError) {
     const payload = err.data as BackendErrorPayload | undefined
+    const hasStatus = typeof err.statusCode === 'number'
     return new ApiError(
       payload?.Msg || err.message || 'Network error',
       err.statusCode,
       payload?.ErrorCode,
       payload?.Data,
+      !hasStatus,
     )
   }
   if (err instanceof Error) {

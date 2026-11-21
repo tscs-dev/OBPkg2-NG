@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save, Trash2 } from '@lucide/vue'
@@ -14,6 +14,7 @@ import { buildWikiDocUrl } from '@/api/portal'
 import { hasValidAuthor } from '@/utils/package'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
 import { isValidEmailFormat, isValidHttpUrl, isValidIdentifierFormat } from '@/utils/format'
+import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
 import type { SavePackageInfoPayload, String3 } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,7 +30,7 @@ const route = useRoute()
 const router = useRouter()
 const { t, te } = useI18n()
 const preferences = usePreferencesStore()
-const { invalidatePackage, invalidatePackageLists } = usePackageCacheActions()
+const { invalidatePackage, invalidatePackageLists, removePackageDetail } = usePackageCacheActions()
 
 const isCreateMode = computed(() => route.name === 'package-new')
 
@@ -61,11 +62,16 @@ const saveSuccess = ref(false)
 const deleteDialogOpen = ref(false)
 const isDeleting = ref(false)
 const deleteError = ref('')
+const lastFilledId = ref<number | null>(null)
+let suppressDirty = false
+const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
 watch(
   [() => isCreateMode.value, () => packageQuery.data.value],
   ([creating, data]) => {
+    suppressDirty = true
     if (creating) {
+      lastFilledId.value = null
       identifier.value = ''
       preservedGuid.value = undefined
       nameForm.value = { Local: '', English: '', Tag: '' }
@@ -78,9 +84,12 @@ watch(
       submittedOnce.value = false
       saveError.value = ''
       saveSuccess.value = false
+      void nextTick(() => { suppressDirty = false; resetDirty() })
       return
     }
-    if (!data) return
+    if (!data) { suppressDirty = false; return }
+    if (data.ID === lastFilledId.value && isDirty.value) { suppressDirty = false; return }
+    lastFilledId.value = data.ID
     identifier.value = data.Identifier ?? ''
     preservedGuid.value = data.GUID
     nameForm.value = {
@@ -107,11 +116,17 @@ watch(
     forcePopup.value = Boolean(data.ForcePopup)
     saveError.value = ''
     saveSuccess.value = false
+    void nextTick(() => { suppressDirty = false; resetDirty() })
   },
   { immediate: true },
 )
 
-// OBPkg2-NG: Don't allow admins to modify Identifier anymore
+watch(
+  [identifier, nameForm, isRepost, authorNameForm, authorEmail, authorHomepage, homepage, forcePopup],
+  () => { if (!suppressDirty) markDirty() },
+  { deep: true },
+)
+
 const canModifyIdentifier = computed(
   () => isCreateMode.value,
 )
@@ -201,16 +216,22 @@ async function handleSubmit() {
   }
 
   isSaving.value = true
+  const currentPkgId = packageId.value
+  const wasCreateMode = isCreateMode.value
   try {
-    if (isCreateMode.value) {
+    if (wasCreateMode) {
       const created = await createPackage(payload)
+      resetDirty()
       await invalidatePackageLists()
-      await router.replace(`/packages/${created.ID}/edit/info`)
-    } else if (packageId.value) {
-      const updated = await updatePackage(packageId.value, payload)
+      if (route.name === 'package-new') {
+        await router.replace(`/packages/${created.ID}/edit/info`)
+      }
+    } else if (currentPkgId) {
+      const updated = await updatePackage(currentPkgId, payload)
+      resetDirty()
       await invalidatePackageLists()
       await invalidatePackage(updated.ID)
-      if (updated.ID !== packageId.value) {
+      if (updated.ID !== currentPkgId && route.params.id === String(currentPkgId)) {
         await router.replace(`/packages/${updated.ID}/edit/info`)
       } else {
         saveSuccess.value = true
@@ -227,11 +248,16 @@ async function handleDeletePackage() {
   if (!packageId.value || isDeleting.value) return
   isDeleting.value = true
   deleteError.value = ''
+  const pkgId = packageId.value
   try {
-    await deletePackage(packageId.value)
+    await deletePackage(pkgId)
+    resetDirty()
+    removePackageDetail(pkgId)
     await invalidatePackageLists()
     deleteDialogOpen.value = false
-    await router.replace('/packages')
+    if (String(route.params.id) === String(pkgId)) {
+      await router.replace('/packages')
+    }
   } catch (err) {
     deleteError.value = formatApiErrorMessage(err, t, te)
   } finally {
@@ -458,7 +484,12 @@ async function handleDeletePackage() {
 
     <!-- 删除作品确认对话框 -->
     <Dialog v-model:open="deleteDialogOpen">
-      <DialogContent class="max-w-md rounded-none">
+      <DialogContent
+        class="max-w-md rounded-none"
+        :show-close-button="!isDeleting"
+        @interact-outside="(e: Event) => { if (isDeleting) e.preventDefault() }"
+        @escape-key-down="(e: Event) => { if (isDeleting) e.preventDefault() }"
+      >
         <DialogHeader>
           <DialogTitle class="text-base">{{ t('packageEdit.info.deleteConfirmTitle') }}</DialogTitle>
           <DialogDescription class="text-sm leading-relaxed">

@@ -1,3 +1,4 @@
+import type { LocationQueryValue } from 'vue-router'
 import { hasTrimIssues } from './string3'
 
 const IDENTIFIER_REGEX = /^[a-zA-Z0-9- ]*$/
@@ -57,6 +58,15 @@ export function isValidHttpUrl(value: string): boolean {
   } catch {
     return false
   }
+}
+
+export function parsePositiveIntParam(
+  raw: string | string[] | LocationQueryValue | LocationQueryValue[],
+): number | null {
+  const str = String(raw ?? '')
+  if (!/^\d+$/.test(str)) return null
+  const n = Number(str)
+  return n > 0 ? n : null
 }
 
 export function hasSubstantialHtmlContent(rawHtml?: string): boolean {
