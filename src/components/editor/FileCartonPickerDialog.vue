@@ -37,23 +37,20 @@ const authStore = useAuthStore()
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 const isLoading = ref(true)
 const errorNotice = ref('')
-let authDispatched = false
-let openGen = 0
+let dispatchGen = 0
 
 async function sendJwtToIframe() {
-  if (authDispatched) return
-  const gen = openGen
-  const targetWindow = iframeRef.value?.contentWindow
-  if (!targetWindow) return
-
+  const gen = ++dispatchGen
   const jwt = await authStore.ensureValidToken()
-  if (gen !== openGen || !props.open) return
+  if (gen !== dispatchGen || !props.open) return
   if (!jwt) {
     errorNotice.value = t('nav.sessionExpiredBanner')
     return
   }
 
-  authDispatched = true
+  const targetWindow = iframeRef.value?.contentWindow
+  if (!targetWindow) return
+
   targetWindow.postMessage(
     {
       type: 'auth:jwt',
@@ -94,12 +91,11 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      openGen++
       isLoading.value = true
       errorNotice.value = ''
-      authDispatched = false
       window.addEventListener('message', handleWindowMessage)
     } else {
+      dispatchGen++
       window.removeEventListener('message', handleWindowMessage)
     }
   },
@@ -116,7 +112,7 @@ onBeforeUnmount(() => {
       class="p-0 flex flex-col gap-0 rounded-none overflow-hidden sm:w-[calc(100vw-4rem)] sm:max-w-5xl sm:h-[min(78vh,720px)] max-sm:inset-0 max-sm:w-screen max-sm:h-svh max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:border-0"
     >
       <DialogHeader class="px-4 py-2.5 bg-muted/40 border-b border-border pr-10 shrink-0 text-left">
-        <DialogTitle class="text-sm font-semibold trackingdisabled-wide flex items-center gap-2">
+        <DialogTitle class="text-sm font-semibold flex items-center gap-2">
           <FolderOpen class="size-3.5 text-primary shrink-0" />
           <span>{{ t('packageEdit.versions.pickerTitle') }}</span>
         </DialogTitle>

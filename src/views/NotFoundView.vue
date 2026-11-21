@@ -26,7 +26,7 @@ watchEffect(() => {
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20">
     <div class="max-w-xl border border-border bg-card">
       <div class="px-5 py-3 bg-muted/40 border-b border-border flex items-center justify-between gap-3">
-        <span class="font-mono text-xs font-semibold trackingdisabled-wider text-muted-foreground">
+        <span class="font-mono text-xs font-semibold text-muted-foreground">
           NOT FOUND
         </span>
         <span class="font-mono text-xs text-muted-foreground truncate max-w-[260px]">

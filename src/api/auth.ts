@@ -58,6 +58,7 @@ export async function setupSessionFromToken(
   token: string,
   authStore: { setSession: (token: string, profile: Uploader) => void },
   queryClient: QueryClient,
+  shouldCommit?: () => boolean,
 ): Promise<void> {
   const payload = decodeJwtPayload(token)
   if (!payload?.uid) {
@@ -66,6 +67,7 @@ export async function setupSessionFromToken(
   const uploader = await bareApiClient<UploaderDetail>(`/uploaders/${payload.uid}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
+  if (shouldCommit && !shouldCommit()) return
   authStore.setSession(token, uploader)
   queryClient.setQueryData(uploaderKeys.detail(payload.uid), uploader)
 }

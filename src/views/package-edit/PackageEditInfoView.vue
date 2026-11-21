@@ -213,6 +213,8 @@ async function handleSubmit() {
       Email: authorEmail.value.trim(),
       Homepage: authorHomepage.value.trim(),
     }
+  } else {
+    payload.Author = null
   }
 
   isSaving.value = true

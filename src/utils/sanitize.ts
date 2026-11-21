@@ -91,6 +91,9 @@ export function sanitizePackageHtml(rawHtml: string | undefined): string {
 
   const doc = new DOMParser().parseFromString(cleaned, 'text/html')
 
+  // 兜底移除编辑器残留的上传占位符
+  doc.querySelectorAll('.image-upload-placeholder').forEach((el) => el.remove())
+
   doc.querySelectorAll('a[href]').forEach((anchor) => {
     let href = (anchor.getAttribute('href') ?? '').trim()
     if (href && !href.startsWith('https://') && !href.startsWith('http://') && !href.startsWith('mailto:') && !href.startsWith('#')) {

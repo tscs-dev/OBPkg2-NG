@@ -133,7 +133,7 @@ export interface SavePackageInfoPayload {
   Identifier: string
   GUID?: string
   Name: String3
-  Author?: Author
+  Author?: Author | null
   Homepage: string
   ForcePopup: boolean
 }

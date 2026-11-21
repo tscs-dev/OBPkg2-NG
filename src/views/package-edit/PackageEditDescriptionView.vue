@@ -24,8 +24,10 @@ const packageId = computed<number | null>(() => {
 
 const packageQuery = usePackageDetailQuery(packageId)
 
-const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean }>>()
-const isEditorBusy = computed(() => editorRef.value?.hasActiveUploads ?? false)
+const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean; hasPendingOrBrokenPlaceholders: boolean }>>()
+const isEditorBusy = computed(() =>
+  (editorRef.value?.hasActiveUploads ?? false) || (editorRef.value?.hasPendingOrBrokenPlaceholders ?? false),
+)
 
 const descriptionHtml = ref('')
 const isSaving = ref(false)

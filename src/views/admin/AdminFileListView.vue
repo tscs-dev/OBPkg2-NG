@@ -509,6 +509,7 @@ watchEffect(() => {
                       :ref="(el) => setAuditMenuRef(file.ID, el)"
                       :file="file"
                       context="admin-table"
+                      :disabled="filesQuery.isPlaceholderData.value"
                     />
                   </div>
                 </td>

@@ -301,6 +301,7 @@ export default {
     retryUpload: '重试',
     removeUpload: '移除',
     uploadOrphan: '上传记录已丢失',
+    replaceTargetLost: '原图片节点已变化，替换已取消。',
     waitForUpload: '请等待图片上传完成',
     urlMustHttps: '链接必须以 https:// 开头',
   },

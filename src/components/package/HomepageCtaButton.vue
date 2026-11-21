@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { ArrowUpRight, Globe } from '@lucide/vue'
 import { cn } from 'cn'
+import { toSafeHttpUrl } from '@/utils/format'
 
 interface Props {
   href: string
@@ -11,17 +12,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const safeHref = computed(() => {
-  const raw = props.href.trim()
-  if (!raw) return ''
-  try {
-    const parsed = new URL(raw)
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-      return raw
-    }
-  } catch { /* invalid URL → not safe */ }
-  return ''
-})
+const safeHref = computed(() => toSafeHttpUrl(props.href) ?? '')
 
 const displayHost = computed(() => {
   const raw = safeHref.value

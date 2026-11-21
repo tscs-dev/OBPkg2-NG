@@ -25,6 +25,7 @@ import { formatApiErrorMessage } from '@/api/auth'
 import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
+import { toSafeHttpUrl } from '@/utils/format'
 import type { PackageSummary } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -101,6 +102,13 @@ const sanitizedBio = computed(() =>
   sanitizePackageHtml(uploader.value?.Description),
 )
 
+const hasBioImages = computed(() => {
+  const html = sanitizedBio.value
+  if (!html) return false
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return doc.querySelector('img') !== null
+})
+
 // 自适应桌面端 <=48vh 合流 / >52vh 双 Tab 滞回逻辑
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 const { height: windowHeight } = useWindowSize()
@@ -141,13 +149,17 @@ watch(
 )
 
 watch(
-  [measuredBioHeight, windowHeight, isDesktop, sanitizedBio],
-  ([bioH, winH, desktop, bioHtml]) => {
+  [measuredBioHeight, windowHeight, isDesktop, sanitizedBio, hasBioImages],
+  ([bioH, winH, desktop, bioHtml, hasImages]) => {
     if (!bioHtml) {
       desktopUseTabs.value = false
       return
     }
     if (!desktop || winH <= 0) {
+      desktopUseTabs.value = true
+      return
+    }
+    if (hasImages) {
       desktopUseTabs.value = true
       return
     }
@@ -259,6 +271,8 @@ const pagedPackages = computed(() => {
 // 图片点击放大灯箱（支持多图翻页）
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+
+watch(uploaderId, () => { lightboxOpen.value = false })
 
 const lightboxImages = computed<LightboxImageItem[]>(() => {
   if (!sanitizedBio.value || typeof DOMParser === 'undefined') return []
@@ -539,7 +553,7 @@ watchEffect(() => {
             <!-- 情形 2：合流模式（无介绍 或 桌面端短介绍 <= 48vh） -->
             <div v-else class="flex flex-col gap-6">
               <section v-if="sanitizedBio" class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                   {{ t('uploader.bioHeading') }}
                 </h2>
                 <div
@@ -657,7 +671,7 @@ watchEffect(() => {
               </section>
 
               <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                   {{ t('uploader.meta.accountHeading') }}
                 </h2>
 
@@ -680,11 +694,11 @@ watchEffect(() => {
                     </dd>
                   </div>
 
-                  <div v-if="uploader.Homepage" class="space-y-0.5">
+                  <div v-if="toSafeHttpUrl(uploader.Homepage)" class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('uploader.meta.website') }}</dt>
                     <dd>
                       <a
-                        :href="uploader.Homepage"
+                        :href="toSafeHttpUrl(uploader.Homepage)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4 break-all"
@@ -716,7 +730,7 @@ watchEffect(() => {
               <Separator />
 
               <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                   {{ t('uploader.meta.statsHeading') }}
                 </h2>
 

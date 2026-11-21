@@ -60,7 +60,10 @@ async function handleSubmit() {
       username: email.value.trim(),
       password: password.value,
     })
-    await setupSessionFromToken(tokenRes.token, authStore, queryClient)
+    await setupSessionFromToken(
+      tokenRes.token, authStore, queryClient,
+      () => router.currentRoute.value.name === 'login',
+    )
     if (router.currentRoute.value.name === 'login') {
       await router.replace(target)
     }

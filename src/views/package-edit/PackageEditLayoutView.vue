@@ -342,7 +342,7 @@ watchEffect(() => {
             <Separator />
 
             <section class="space-y-2.5 px-1">
-              <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+              <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                 {{ t('packageEdit.checklist.title') }}
               </h2>
               <ul class="space-y-2 text-sm">

@@ -243,9 +243,11 @@ function handleSubmit() {
     return
   }
 
-  // 编辑已通过验证的文件时，先弹窗确认将取消验证并暂时下架
+  // 非版主编辑已通过验证的文件时，先弹窗确认将取消验证并暂时下架
+  // 版主不受 FilePost 强制下架影响，省略 Validated 保持原状态
   if (
     !isCreateMode.value &&
+    !isModerator.value &&
     existingFile.value?.NeedValidation &&
     existingFile.value?.Validated
   ) {

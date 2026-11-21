@@ -28,6 +28,7 @@ import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useB
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { hasValidAuthor } from '@/utils/package'
+import { toSafeHttpUrl } from '@/utils/format'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -159,6 +160,8 @@ watch(commentIframeSrc, () => {
 // 缩略图及描述中图片点击放大灯箱（支持多图翻页）
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+
+watch(packageId, () => { lightboxOpen.value = false })
 
 const lightboxImages = computed<LightboxImageItem[]>(() => {
   const list: LightboxImageItem[] = []
@@ -537,8 +540,8 @@ watchEffect(() => {
                         <span>{{ t('detail.meta.email') }}</span>
                       </a>
                       <a
-                        v-if="pkg.Author.Homepage"
-                        :href="pkg.Author.Homepage"
+                        v-if="toSafeHttpUrl(pkg.Author.Homepage)"
+                        :href="toSafeHttpUrl(pkg.Author.Homepage)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
@@ -595,8 +598,8 @@ watchEffect(() => {
                       <span>{{ t('detail.meta.email') }}</span>
                     </a>
                     <a
-                      v-if="pkg.Uploader.Homepage"
-                      :href="pkg.Uploader.Homepage"
+                      v-if="toSafeHttpUrl(pkg.Uploader?.Homepage)"
+                      :href="toSafeHttpUrl(pkg.Uploader?.Homepage)"
                       target="_blank"
                       rel="noopener noreferrer"
                       class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
@@ -612,7 +615,7 @@ watchEffect(() => {
 
               <!-- 技术元数据 -->
               <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
+                <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                   {{ t('detail.meta.specsHeading') }}
                 </h2>
 
@@ -651,11 +654,11 @@ watchEffect(() => {
                     </dd>
                   </div>
 
-                  <div v-if="pkg.Homepage" class="space-y-0.5">
+                  <div v-if="toSafeHttpUrl(pkg.Homepage)" class="space-y-0.5">
                     <dt class="text-muted-foreground">{{ t('detail.meta.homepageUrl') }}</dt>
                     <dd class="space-y-1">
                       <a
-                        :href="pkg.Homepage"
+                        :href="toSafeHttpUrl(pkg.Homepage)"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="text-primary hover:underline underline-offset-4 break-all inline-flex items-center gap-1"

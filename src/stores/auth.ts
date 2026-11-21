@@ -63,11 +63,24 @@ function readStoredToken(): string | null {
   return window.localStorage.getItem(TOKEN_STORAGE_KEY)
 }
 
+function isValidProfile(obj: unknown): obj is Uploader {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'ID' in obj &&
+    typeof (obj as any).ID === 'number' &&
+    Number.isInteger((obj as any).ID) &&
+    (obj as any).ID > 0
+  )
+}
+
 function readStoredProfile(): Uploader | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Uploader) : null
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return isValidProfile(parsed) ? parsed : null
   } catch {
     return null
   }
@@ -255,12 +268,21 @@ export const useAuthStore = defineStore('auth', () => {
     return perform()
   }
 
+  function hasValidProfileInMemoryOrStorage(): boolean {
+    return isValidProfile(profile.value) || isValidProfile(readStoredProfile())
+  }
+
   async function ensureValidToken(): Promise<string | null> {
     const current = token.value ?? readStoredToken()
     if (!current) return null
 
     if (isTokenExpired(current)) {
       expireSession()
+      return null
+    }
+
+    if (!hasValidProfileInMemoryOrStorage()) {
+      clearCredentials(false)
       return null
     }
 
@@ -288,17 +310,18 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         token.value = nextToken
         sessionExpiredNotice.value = false
+        const storedProfile = readStoredProfile()
+        if (storedProfile) {
+          profile.value = storedProfile
+        }
         scheduleProactiveRefresh()
       }
     } else if (event.key === PROFILE_STORAGE_KEY) {
       if (!event.newValue) {
         profile.value = null
       } else {
-        try {
-          profile.value = JSON.parse(event.newValue) as Uploader
-        } catch {
-          profile.value = null
-        }
+        const parsed = readStoredProfile()
+        profile.value = parsed
       }
     } else if (event.key === null) {
       clearRefreshTimer()
@@ -315,6 +338,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (token.value) {
       if (isTokenExpired(token.value)) {
         clearCredentials(false)
+      } else if (!hasValidProfileInMemoryOrStorage()) {
+        clearCredentials(false)
       } else if (isTokenInRefreshWindow(token.value)) {
         void ensureValidToken()
       } else {
@@ -327,6 +352,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (document.visibilityState === 'visible' && token.value) {
         if (isTokenExpired(token.value)) {
           expireSession()
+        } else if (!hasValidProfileInMemoryOrStorage()) {
+          clearCredentials(false)
         } else if (isTokenInRefreshWindow(token.value)) {
           void ensureValidToken()
         } else {

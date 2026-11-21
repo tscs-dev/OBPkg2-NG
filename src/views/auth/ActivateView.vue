@@ -43,7 +43,7 @@ const nameS3 = ref<String3>({ Local: '', English: '', Tag: '' })
 const submittedOnce = ref(false)
 const isSubmitting = ref(false)
 const submitError = ref('')
-const activated = ref(false)
+const autoLoginFailed = ref(false)
 
 const passwordError = computed(() => {
   if (!submittedOnce.value) return null
@@ -118,20 +118,22 @@ async function handleSubmit() {
       Password: password.value,
       Name: normalizeString3ForSubmit(nameS3.value),
     })
-    activated.value = true
 
-    // 尝试自动登录（激活令牌已消耗，失败时只显示"去登录"链接）
+    // 尝试自动登录（激活令牌已消耗，失败时显示"去登录"链接）
     try {
       const tokenRes = await loginApi({
         username: verifiedEmail.value,
         password: password.value,
       })
-      await setupSessionFromToken(tokenRes.token, authStore, queryClient)
+      await setupSessionFromToken(
+        tokenRes.token, authStore, queryClient,
+        () => router.currentRoute.value.name === 'activate',
+      )
       if (router.currentRoute.value.name === 'activate') {
         await router.replace({ name: 'settings-profile' })
       }
     } catch {
-      // 自动登录失败，模板通过 `activated` ref 显示成功消息 + 登录链接
+      autoLoginFailed.value = true
     }
   } catch (err) {
     submitError.value = formatApiErrorMessage(err, t, te)
@@ -190,7 +192,7 @@ watchEffect(() => {
 
     <!-- 激活成功但自动登录失败 -->
     <FormPanel
-      v-else-if="activated"
+      v-else-if="autoLoginFailed"
       :title="t('auth.activateTitle')"
     >
       <div class="p-4 space-y-3">

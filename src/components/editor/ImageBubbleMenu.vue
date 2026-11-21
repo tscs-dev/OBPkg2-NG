@@ -10,6 +10,10 @@ const props = defineProps<{
   editor: Editor
 }>()
 
+const emit = defineEmits<{
+  error: [message: string]
+}>()
+
 const { t } = useI18n()
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -29,23 +33,28 @@ async function handleFileSelected(e: Event) {
   input.value = ''
   if (!file || !file.type.startsWith('image/')) return
 
-  // 记录当前选中图片的位置，上传期间选区可能移动
-  const { from } = props.editor.state.selection
+  const originalNode = props.editor.state.doc.nodeAt(props.editor.state.selection.from)
+  if (!originalNode || originalNode.type.name !== 'image') return
+
+  let trackedPos = props.editor.state.selection.from
+  const onTransaction = ({ transaction: tr }: { transaction: any }) => {
+    trackedPos = tr.mapping.map(trackedPos, 1)
+  }
+  props.editor.on('transaction', onTransaction)
 
   isReplacing.value = true
   try {
     const result = await uploadImageToLsky(file)
-    // 写回原位置的图片节点，而非当时的选区
-    const node = props.editor.state.doc.nodeAt(from)
-    if (node?.type.name === 'image') {
-      props.editor.chain().setNodeSelection(from).updateAttributes('image', { src: result.fullUrl }).run()
+    const currentNode = props.editor.state.doc.nodeAt(trackedPos)
+    if (currentNode === originalNode) {
+      props.editor.chain().setNodeSelection(trackedPos).updateAttributes('image', { src: result.fullUrl }).run()
     } else {
-      // 回退：如果原位置不再是图片，尝试当前选区
-      props.editor.chain().focus().updateAttributes('image', { src: result.fullUrl }).run()
+      emit('error', t('editor.replaceTargetLost'))
     }
-  } catch {
-    // 替换失败，图片保持原样
+  } catch (err) {
+    emit('error', err instanceof Error ? err.message : t('editor.uploadError'))
   } finally {
+    props.editor.off('transaction', onTransaction)
     isReplacing.value = false
   }
 }

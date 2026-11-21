@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ChevronLeft,
@@ -387,18 +387,34 @@ watch(
 )
 
 watch(normalizedImages, (imgs) => {
-  if (imgs.length > 0 && currentIndex.value >= imgs.length) {
+  if (imgs.length === 0) {
+    emit('update:open', false)
+    return
+  }
+  if (currentIndex.value >= imgs.length) {
     currentIndex.value = imgs.length - 1
   }
 })
 
-watch(currentItem, () => {
-  resetTransform()
-  isLoading.value = true
-  hasError.value = false
-  naturalWidth.value = 0
-  renderedFitWidth.value = 0
-})
+watch(
+  () => currentItem.value?.src,
+  () => {
+    resetTransform()
+    hasError.value = false
+    naturalWidth.value = 0
+    renderedFitWidth.value = 0
+    nextTick(() => {
+      const img = imgRef.value
+      if (img && img.complete && img.naturalWidth > 0) {
+        isLoading.value = false
+        naturalWidth.value = img.naturalWidth
+        measureFitWidth()
+      } else {
+        isLoading.value = true
+      }
+    })
+  },
+)
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)

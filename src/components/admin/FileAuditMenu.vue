@@ -37,10 +37,12 @@ import {
 interface Props {
   file: PackageFile
   context?: 'admin-table' | 'version-form'
+  disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   context: 'admin-table',
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -153,6 +155,7 @@ defineExpose({
         variant="ghost"
         size="icon-sm"
         class="rounded-none cursor-pointer"
+        :disabled="disabled"
         :aria-label="t('adminFiles.actions.more')"
       >
         <MoreHorizontal class="size-4" />

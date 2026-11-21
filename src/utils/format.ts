@@ -60,6 +60,22 @@ export function isValidHttpUrl(value: string): boolean {
   }
 }
 
+/**
+ * 将用户输入的 URL 规范为安全的 http/https 链接，不符合的返回 undefined。
+ */
+export function toSafeHttpUrl(raw: string | undefined): string | undefined {
+  if (!raw) return undefined
+  const trimmed = raw.trim()
+  if (!trimmed) return undefined
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return trimmed
+  } catch {
+    // not a valid URL
+  }
+  return undefined
+}
+
 export function parsePositiveIntParam(
   raw: string | string[] | LocationQueryValue | LocationQueryValue[],
 ): number | null {

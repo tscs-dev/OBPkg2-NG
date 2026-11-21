@@ -20,8 +20,10 @@ const { targetUserId } = useSettingsTarget()
 const uploaderQuery = useUploaderDetailQuery(targetUserId)
 const { isDirty, markDirty, resetDirty } = useUnsavedChangesGuard()
 
-const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean }>>()
-const isEditorBusy = computed(() => editorRef.value?.hasActiveUploads ?? false)
+const editorRef = ref<ComponentPublicInstance<{ hasActiveUploads: boolean; hasPendingOrBrokenPlaceholders: boolean }>>()
+const isEditorBusy = computed(() =>
+  (editorRef.value?.hasActiveUploads ?? false) || (editorRef.value?.hasPendingOrBrokenPlaceholders ?? false),
+)
 
 const bioHtml = ref('')
 const isSaving = ref(false)

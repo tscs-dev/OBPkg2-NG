@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AlertCircle, CheckCircle2, Clock, Download, ExternalLink } from '@lucide/vue'
+import { CheckCircle2, Download, ExternalLink } from '@lucide/vue'
 import type { PackageFile } from '@/types/models'
 import { buildFileDownloadUrl } from '@/config/platforms'
 import { sortPackageFiles } from '@/utils/package'
@@ -98,7 +98,7 @@ const sortedFiles = computed(() => {
                 </span>
                 <span
                   v-if="file.isLatestVersion"
-                  class="px-1.5 py-0.5 text-[10px] font-semibold uppercase trackingdisabled-wide bg-primary/10 text-primary border border-primary/20"
+                  class="px-1.5 py-0.5 text-[10px] font-semibold uppercase bg-primary/10 text-primary border border-primary/20"
                 >
                   {{ t('detail.downloadsLatest') }}
                 </span>
@@ -114,24 +114,7 @@ const sortedFiles = computed(() => {
             </td>
 
             <td class="py-2.5 px-3.5 text-xs sm:text-sm whitespace-nowrap">
-              <span
-                v-if="file.NeedValidation && !file.Validated && file.RejectReason"
-                class="inline-flex items-center gap-1.5 text-destructive"
-              >
-                <AlertCircle class="size-3.5 shrink-0" />
-                <span>{{ `${t('common.rejected')}: ${file.RejectReason}` }}</span>
-              </span>
-              <span
-                v-else-if="file.NeedValidation && !file.Validated"
-                class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400"
-              >
-                <Clock class="size-3.5 shrink-0" />
-                <span>{{ t('common.validationPending') }}</span>
-              </span>
-              <span
-                v-else
-                class="inline-flex items-center gap-1.5 text-muted-foreground"
-              >
+              <span class="inline-flex items-center gap-1.5 text-muted-foreground">
                 <CheckCircle2 class="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{{ t('common.validated') }}</span>
               </span>

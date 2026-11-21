@@ -203,7 +203,24 @@ const activeUploadCount = computed(() => {
 
 const hasActiveUploads = computed(() => activeUploadCount.value > 0)
 
-defineExpose({ hasActiveUploads })
+const hasPendingOrBrokenPlaceholders = computed(() => {
+  void editorTick.value
+  const doc = editor.value?.state.doc
+  if (!doc) return false
+  let found = false
+  doc.descendants((node) => {
+    if (found) return false
+    if (node.type.name === 'imageUploadPlaceholder') {
+      found = true
+      return false
+    }
+  })
+  return found
+})
+
+const bubbleMenuError = ref('')
+
+defineExpose({ hasActiveUploads, hasPendingOrBrokenPlaceholders })
 
 /* ---------- image upload core ---------- */
 
@@ -672,6 +689,17 @@ onBeforeUnmount(() => {
       @change="handleImageFileSelected"
     />
 
+    <!-- 错误提示 -->
+    <div
+      v-if="bubbleMenuError"
+      class="flex items-center gap-2 px-3 py-1.5 bg-destructive/10 text-destructive text-xs border-b"
+    >
+      <span class="flex-1">{{ bubbleMenuError }}</span>
+      <button type="button" class="shrink-0 hover:opacity-70" @click="bubbleMenuError = ''">
+        <X class="size-3" />
+      </button>
+    </div>
+
     <!-- 编辑主体 -->
     <textarea
       v-if="isSourceMode"
@@ -689,7 +717,7 @@ onBeforeUnmount(() => {
         :link-popover-open="linkPopoverOpen"
         @edit-link="handleEditLinkFromBubble"
       />
-      <ImageBubbleMenu :editor="editor" />
+      <ImageBubbleMenu :editor="editor" @error="(msg: string) => { bubbleMenuError = msg }" />
     </template>
   </div>
 </template>
