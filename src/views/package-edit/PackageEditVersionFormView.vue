@@ -88,6 +88,7 @@ let suppressDirty = false
 const lastFilledFileId = ref<number | string | null>(null)
 
 const isModerator = computed(() => authStore.privilege >= 10)
+const hasReverifyExemption = computed(() => authStore.privilege >= 50)
 const canManualEdit = computed(() => isModerator.value && manualOverride.value)
 
 watch(
@@ -247,7 +248,7 @@ function handleSubmit() {
   // 版主不受 FilePost 强制下架影响，省略 Validated 保持原状态
   if (
     !isCreateMode.value &&
-    !isModerator.value &&
+    !hasReverifyExemption.value &&
     existingFile.value?.NeedValidation &&
     existingFile.value?.Validated
   ) {
