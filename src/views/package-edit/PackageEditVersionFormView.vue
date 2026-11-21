@@ -261,16 +261,6 @@ function handleAuditDeleted() {
         <ArrowLeft class="size-3.5" />
         <span>{{ t('packageEdit.versions.backToVersions') }}</span>
       </router-link>
-
-      <a
-        :href="fileFieldsDocUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-1 text-xs text-primary hover:underline underline-offset-4"
-      >
-        <span>{{ t('settings.profile.namingGuideLink') }}</span>
-        <ExternalLink class="size-3" />
-      </a>
     </div>
 
     <!-- 找不到文件时 -->

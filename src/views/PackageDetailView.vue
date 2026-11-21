@@ -502,14 +502,10 @@ watchEffect(() => {
 
               <!-- 创作者与上传者 -->
               <section class="space-y-3">
-                <h2 class="text-sm font-semibold uppercase trackingdisabled-wider text-muted-foreground">
-                  {{ t('detail.meta.peopleHeading') }}
-                </h2>
-
                 <!-- 转载场景：先展示原作者，再展示上传者 -->
                 <div v-if="isRepost && pkg.Author" class="flex flex-col gap-3">
                   <div class="space-y-1">
-                    <div class="text-sm text-muted-foreground">
+                    <div class="text-sm font-semibold text-muted-foreground">
                       {{ t('detail.meta.originalAuthor') }}
                     </div>
                     <div class="text-sm font-medium text-foreground break-words">
@@ -540,7 +536,7 @@ watchEffect(() => {
                   <template v-if="pkg.Uploader">
                     <Separator />
                     <div class="space-y-1">
-                      <div class="text-sm text-muted-foreground">
+                      <div class="text-sm font-semibold text-muted-foreground">
                         {{ t('detail.meta.uploader') }}
                       </div>
                       <router-link
@@ -564,7 +560,7 @@ watchEffect(() => {
 
                 <!-- 原创场景：只展示上传者并标记为作者 -->
                 <div v-else-if="pkg.Uploader" class="space-y-1">
-                  <div class="text-sm text-muted-foreground">
+                  <div class="text-sm font-semibold text-muted-foreground">
                     {{ t('detail.meta.author') }}
                   </div>
                   <router-link
@@ -605,14 +601,7 @@ watchEffect(() => {
                 </h2>
 
                 <dl class="space-y-3 text-sm">
-                  <div class="space-y-0.5">
-                    <dt class="text-muted-foreground">{{ t('detail.meta.packageId') }}</dt>
-                    <dd class="font-mono text-foreground tabular-nums">#{{ pkg.ID }}</dd>
-                  </div>
-
-                  <div class="space-y-0.5">
-                    <dt class="text-muted-foreground">{{ t('detail.meta.identifier') }}</dt>
-                    <dd class="flex items-start justify-between gap-1.5">
+                  <div class="space-y-0.5"><dd class="flex items-start justify-between gap-1.5">
                       <span class="font-mono text-foreground break-all select-all">
                         {{ pkg.Identifier }}
                       </span>

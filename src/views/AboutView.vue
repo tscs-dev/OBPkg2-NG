@@ -16,19 +16,6 @@ const buildTimeFormatted = computed(() => formatLocalTimestamp(__BUILD_TIME__))
 const currentYear = new Date().getFullYear()
 const copyrightText = computed(() => t('about.copyright', { year: currentYear }))
 
-const techStackItems = [
-  { name: 'Vue 3', role: 'UI Framework' },
-  { name: 'TypeScript', role: 'Type System' },
-  { name: 'Tailwind CSS v4', role: 'Styling & Typography' },
-  { name: 'shadcn-vue / Reka UI', role: 'Accessible Primitives' },
-  { name: 'TanStack Vue Query', role: 'Server State & Cache' },
-  { name: 'Pinia', role: 'Client Store' },
-  { name: 'ofetch', role: 'HTTP Client' },
-  { name: 'vue-i18n', role: 'Localization (ZH / EN / JA)' },
-  { name: 'DOMPurify', role: 'HTML Sanitization' },
-  { name: 'Lucide Icons', role: 'Iconography' },
-]
-
 watchEffect(() => {
   setBreadcrumb(
     [
@@ -82,6 +69,9 @@ watchEffect(() => {
             <p class="text-sm text-foreground/85 leading-relaxed">
               {{ t('about.copyrightBody1') }}
             </p>
+            <p class="text-sm text-foreground/85 leading-relaxed">
+              {{ t('about.copyrightBody2') }}
+            </p>
           </section>
 
           <Separator />
@@ -89,23 +79,23 @@ watchEffect(() => {
           <section class="space-y-3">
             <div class="space-y-1">
               <h2 class="text-sm font-semibold tracking-tight text-foreground">
-                {{ t('about.stackTitle') }}
+                {{ t('about.ossLicenseTitle') }}
               </h2>
               <p class="text-sm text-muted-foreground">
-                {{ t('about.stackSubtitle') }}
+                {{ t('about.ossLicenseSubitle') }}
               </p>
             </div>
 
-            <dl class="grid grid-cols-1 sm:grid-cols-2 border-t border-l border-border">
-              <div
-                v-for="item in techStackItems"
-                :key="item.name"
-                class="px-3.5 py-2.5 border-r border-b border-border flex items-baseline justify-between gap-3"
-              >
-                <dt class="text-sm font-medium text-foreground">{{ item.name }}</dt>
-                <dd class="text-[11px] font-mono text-muted-foreground text-right">{{ item.role }}</dd>
-              </div>
-            </dl>
+            <a
+              href="/about/licenses-frontend.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm inline-flex items-center gap-1.5 text-primary hover:underline underline-offset-4"
+            >
+              <Globe class="size-3 shrink-0" />
+              <span>{{ t('about.ossLicenseButton') }}</span>
+              <ExternalLink class="size-3 shrink-0" />
+            </a>
           </section>
         </div>
 
@@ -117,9 +107,8 @@ watchEffect(() => {
               <h2 class="text-sm font-semibold mb-1">
                 {{ t('about.softwareName') }}
               </h2>
-              <p class="text-muted-foreground text-sm">
-                Omni-purpose platform for professionally Built Packages
-              </p>
+              
+              <p class="text-sm font-medium text-foreground tabular-nums">{{ copyrightText }}</p>
 
               <dl class="space-y-2.5 text-sm">
                 <div class="space-y-0.5">
@@ -130,11 +119,6 @@ watchEffect(() => {
                 <div class="space-y-0.5">
                   <dt class="text-muted-foreground">{{ t('about.meta.buildTimeLabel') }}</dt>
                   <dd class="text-foreground tabular-nums">{{ buildTimeFormatted }}</dd>
-                </div>
-
-                <div class="space-y-0.5">
-                  <dt class="text-muted-foreground">{{ t('about.meta.copyrightLabel') }}</dt>
-                  <dd class="font-medium text-foreground tabular-nums">{{ copyrightText }}</dd>
                 </div>
               </dl>
             </section>

@@ -82,7 +82,7 @@ const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
   if (route.name === 'package-detail') {
     return [
       { label: t('nav.home'), to: '/' },
-      { label: t('nav.packages'), to: '/packages' },
+      { label: t('packages.breadcrumb'), to: '/packages' },
       { label: `#${String(route.params.id ?? '')}` },
     ]
   }

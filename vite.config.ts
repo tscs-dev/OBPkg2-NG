@@ -10,7 +10,10 @@ const pkgJson = JSON.parse(
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [
+    vue(), 
+    tailwindcss()
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(pkgJson.version ?? '0.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
@@ -20,4 +23,9 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  build: {
+    license: {
+      fileName: "about/licenses-frontend.md"
+    }
+  }
 })
