@@ -191,7 +191,7 @@ defineExpose({
         as-child
         class="rounded-none cursor-pointer"
       >
-        <a :href="file.FetchURL" target="_blank" rel="noopener noreferrer">
+        <a :href="file.FetchURL" target="_blank">
           <Download class="size-3.5" />
           <span>{{ t('adminFiles.actions.downloadTest') }}</span>
         </a>

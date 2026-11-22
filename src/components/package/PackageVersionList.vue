@@ -92,7 +92,6 @@ const sortedFiles = computed(() => {
             <a
               :href="file.downloadUrl"
               target="_blank"
-              rel="noopener noreferrer"
             >
               <ExternalLink v-if="file.primaryPlatform === 'hmmsim'" class="size-3.5" />
               <Download v-else class="size-3.5" />
@@ -195,7 +194,6 @@ const sortedFiles = computed(() => {
                     <a
                       :href="file.downloadUrl"
                       target="_blank"
-                      rel="noopener noreferrer"
                       :aria-label="
                         file.primaryPlatform === 'hmmsim'
                           ? t('detail.hmmsimInstallAction')

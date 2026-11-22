@@ -2,15 +2,13 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save, Trash2 } from '@lucide/vue'
+import { AlertCircle, CheckCircle2, Loader2, Save, Trash2 } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
 import FormRow from '@/components/form/FormRow.vue'
 import String3Fields from '@/components/form/String3Fields.vue'
-import { usePreferencesStore } from '@/stores/preferences'
 import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/packages'
 import { createPackage, deletePackage, updatePackage } from '@/api/packages'
 import { formatApiErrorMessage } from '@/api/auth'
-import { buildWikiDocUrl } from '@/api/portal'
 import { hasValidAuthor } from '@/utils/package'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
 import { isValidEmailFormat, isValidHttpUrl, isValidIdentifierFormat } from '@/utils/format'
@@ -29,7 +27,6 @@ import {
 const route = useRoute()
 const router = useRouter()
 const { t, te } = useI18n()
-const preferences = usePreferencesStore()
 const { invalidatePackage, invalidatePackageLists, removePackageDetail } = usePackageCacheActions()
 
 const isCreateMode = computed(() => route.name === 'package-new')
@@ -129,10 +126,6 @@ watch(
 
 const canModifyIdentifier = computed(
   () => isCreateMode.value,
-)
-
-const packFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'packfields'),
 )
 
 const identifierError = computed(() => {

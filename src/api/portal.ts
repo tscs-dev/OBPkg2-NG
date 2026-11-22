@@ -3,7 +3,7 @@ import { ENV } from '@/config/env'
 import type { SiteStats } from '@/types/models'
 import { sanitizeWikiHtml } from '@/utils/sanitize'
 
-export type SupportedLocale = 'zh-CN' | 'en' | 'ja'
+export type SupportedLocale = 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'ko'
 
 export function buildWikiDocUrl(locale: SupportedLocale, topic: string): string {
   const root = ENV.docRootUrl.replace(/\/+$/, '')

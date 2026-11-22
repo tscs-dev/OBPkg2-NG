@@ -552,7 +552,7 @@ watchEffect(() => {
                         v-if="toSafeHttpUrl(pkg.Author.Homepage)"
                         :href="toSafeHttpUrl(pkg.Author.Homepage)"
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener"
                         class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
                       >
                         <ExternalLink class="size-3" />
@@ -610,7 +610,7 @@ watchEffect(() => {
                       v-if="toSafeHttpUrl(pkg.Uploader?.Homepage)"
                       :href="toSafeHttpUrl(pkg.Uploader?.Homepage)"
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="noopener"
                       class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
                     >
                       <ExternalLink class="size-3" />
@@ -669,7 +669,7 @@ watchEffect(() => {
                       <a
                         :href="toSafeHttpUrl(pkg.Homepage)"
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener"
                         class="text-primary hover:underline underline-offset-4 break-all inline-flex items-center gap-1"
                       >
                         <span>{{ pkg.Homepage }}</span>

@@ -90,7 +90,7 @@ function isNavActive(target: 'home' | 'packages' | 'about'): boolean {
 }
 
 function handleLocaleChange(value: unknown) {
-  if (value === 'zh-CN' || value === 'en' || value === 'ja') {
+  if (value === 'zh-CN' || value === 'zh-TW' || value === 'en' || value === 'ja' || value === 'ko') {
     preferences.setLocale(value as SupportedLocale)
   }
 }

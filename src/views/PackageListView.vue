@@ -166,7 +166,7 @@ function handlePageUpdate(newPage: number) {
             </template>
             <template v-else-if="packagesQuery.data.value && !packagesQuery.isPlaceholderData.value">
               <span v-if="total > 0" class="inline-flex flex-wrap">
-                <span>{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
+                <span class="whitespace-pre-wrap">{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
                 <span>{{ t('packages.rangeSummaryTotal', { total }) }}</span>
               </span>
               <span v-else>{{ t('packages.totalCount', { count: 0 }) }}</span>

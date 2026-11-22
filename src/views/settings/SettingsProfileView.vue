@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2, Save } from '@lucide/vue'
+import { AlertCircle, CheckCircle2, Loader2, Save } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
 import FormRow from '@/components/form/FormRow.vue'
 import String3Fields from '@/components/form/String3Fields.vue'

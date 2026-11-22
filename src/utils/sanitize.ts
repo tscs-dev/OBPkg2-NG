@@ -60,7 +60,7 @@ export function sanitizeWikiHtml(rawHtml: string): string {
     anchor.setAttribute('href', resolved)
     if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
       anchor.setAttribute('target', '_blank')
-      anchor.setAttribute('rel', 'noopener noreferrer')
+      anchor.setAttribute('rel', 'noopener') // Give referrer, so that the author can track the traffic
     }
   })
 
@@ -102,7 +102,7 @@ export function sanitizePackageHtml(rawHtml: string | undefined): string {
     }
     if (href.startsWith('http://') || href.startsWith('https://')) {
       anchor.setAttribute('target', '_blank')
-      anchor.setAttribute('rel', 'noopener noreferrer')
+      anchor.setAttribute('rel', 'noopener') // Give referrer, so that the author can track the traffic
     }
   })
 

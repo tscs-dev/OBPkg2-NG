@@ -15,7 +15,7 @@ import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import PackageGhostRow from '@/components/package/PackageGhostRow.vue'
 import { usePackagesQuery } from '@/queries/packages'
 import { useSiteStatsQuery, useWikiDocQuery } from '@/queries/portal'
-import { buildWikiDocUrl } from '@/api/portal'
+import { buildWikiDocUrl, type SupportedLocale } from '@/api/portal'
 import { ENV } from '@/config/env'
 import { usePreferencesStore } from '@/stores/preferences'
 import { Button } from '@/components/ui/button'
@@ -27,7 +27,7 @@ const preferences = usePreferencesStore()
 
 // 两栏公告：面向用户 (bcs-doc:status) & 面向创作者 (bcs-doc:ann-uploader)
 // 优先使用用户语言，非中文时 fallback 到 zh-CN
-const annLocale = computed(() => preferences.locale as 'zh-CN' | 'en' | 'ja')
+const annLocale = computed(() => preferences.locale as SupportedLocale)
 const userAnnQuery = useWikiDocQuery(annLocale, 'status')
 const uploaderAnnQuery = useWikiDocQuery(annLocale, 'ann-uploader')
 const userAnnFallbackQuery = useWikiDocQuery('zh-CN', 'status')
@@ -51,7 +51,7 @@ function resolveAnnQuery(
   primary: typeof userAnnQuery,
   fallback: typeof userAnnFallbackQuery,
 ) {
-  if (annLocale.value === 'zh-CN') return primary
+  if (annLocale.value === 'zh-CN' || annLocale.value === 'zh-TW') return primary
   if (!primary.isSuccess.value) return primary
   if (!primary.data.value?.isEmpty) return primary
   return fallback
@@ -68,7 +68,7 @@ const uploaderAnnUrl = computed(() => {
   const q = effectiveUploaderAnnQuery.value
   return q.data.value?.sourceUrl ?? buildWikiDocUrl(annLocale.value, 'ann-uploader')
 })
-const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale as 'zh-CN' | 'en' | 'ja', 'start'))
+const usageGuideUrl = computed(() => buildWikiDocUrl(preferences.locale as SupportedLocale, 'start'))
 
 const announcementCards = computed(() => [
   {
@@ -119,7 +119,6 @@ const announcementCards = computed(() => [
                 <a
                   :href="card.url"
                   target="_blank"
-                  rel="noopener noreferrer"
                   class="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                   :title="t('home.openOnWiki')"
                 >
@@ -155,7 +154,6 @@ const announcementCards = computed(() => [
                   <a
                     :href="card.url"
                     target="_blank"
-                    rel="noopener noreferrer"
                     class="text-[11px] text-primary hover:underline underline-offset-4"
                   >
                     {{ t('home.openOnWiki') }}
@@ -171,7 +169,6 @@ const announcementCards = computed(() => [
                 <a
                   :href="card.url"
                   target="_blank"
-                  rel="noopener noreferrer"
                   class="inline-flex items-center gap-1 text-[11px] text-primary hover:underline underline-offset-4"
                 >
                   <span>{{ t('home.openOnWiki') }}</span>
@@ -265,7 +262,6 @@ const announcementCards = computed(() => [
                 <a
                   :href="usageGuideUrl"
                   target="_blank"
-                  rel="noopener noreferrer"
                   class="px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
                 >
                   <span class="flex items-center gap-2 min-w-0">
@@ -279,7 +275,6 @@ const announcementCards = computed(() => [
                 <a
                   :href="ENV.analyticsUrl"
                   target="_blank"
-                  rel="noopener noreferrer"
                   class="px-2 py-1.5 flex items-center justify-between gap-2 text-foreground/85 hover:bg-muted/75 hover:text-foreground transition-colors"
                 >
                   <span class="flex items-center gap-2 min-w-0">

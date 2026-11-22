@@ -63,7 +63,7 @@ function handleRemove() {
       <a
         :href="linkHref"
         target="_blank"
-        rel="noopener noreferrer"
+        rel="noopener"
         class="max-w-[200px] truncate px-1.5 py-0.5 text-primary hover:underline underline-offset-2 cursor-pointer"
         :title="linkHref"
         @click.prevent="openLink"

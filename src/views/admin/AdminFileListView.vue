@@ -268,7 +268,7 @@ const displayEnd = computed(() =>
             </template>
             <template v-else-if="filesQuery.data.value && !filesQuery.isPlaceholderData.value">
               <span v-if="total > 0" class="inline-flex flex-wrap">
-                <span>{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
+                <span class="whitespace-pre-wrap">{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
                 <span>{{ t('packages.rangeSummaryTotal', { total }) }}</span>
               </span>
               <span v-else>{{ t('adminFiles.totalCount', { count: 0 }) }}</span>
@@ -463,7 +463,6 @@ const displayEnd = computed(() =>
                           <a
                             :href="file.FetchURL"
                             target="_blank"
-                            rel="noopener noreferrer"
                             :aria-label="t('adminFiles.actions.downloadTest')"
                           >
                             <Download class="size-3.5" />

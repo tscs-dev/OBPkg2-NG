@@ -76,7 +76,6 @@ const copyrightText = computed(() => t('about.copyright', { year: currentYear })
             <a
               href="/about/licenses-frontend.md"
               target="_blank"
-              rel="noopener noreferrer"
               class="text-sm inline-flex items-center gap-1.5 text-primary hover:underline underline-offset-4"
             >
               <Globe class="size-3 shrink-0" />
@@ -143,7 +142,6 @@ const copyrightText = computed(() => t('about.copyright', { year: currentYear })
                     <a
                       href="https://www.zbx1425.cn"
                       target="_blank"
-                      rel="noopener noreferrer"
                       class="inline-flex items-center gap-1.5 text-primary hover:underline underline-offset-4"
                     >
                       <Globe class="size-3 shrink-0" />

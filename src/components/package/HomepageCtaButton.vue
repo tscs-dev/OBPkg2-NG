@@ -31,7 +31,7 @@ const displayHost = computed(() => {
     v-if="safeHref"
     :href="safeHref"
     target="_blank"
-    rel="noopener noreferrer"
+    rel="noopener"
     :class="
       cn(
         'group h-11 px-3 inline-flex items-center gap-2.5 bg-primary text-background hover:bg-primary/90 border border-foreground transition-colors focus-visible:outline-2 focus-visible:outline-ring select-none',
