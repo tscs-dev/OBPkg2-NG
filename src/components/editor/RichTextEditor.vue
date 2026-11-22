@@ -27,7 +27,7 @@ import {
   X,
 } from '@lucide/vue'
 import { uploadImageToLsky } from '@/api/lsky'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { sanitizePackageHtmlForStorage } from '@/utils/sanitize'
 import {
   ImageUploadPlaceholder,
   findPlaceholderPos,
@@ -323,7 +323,7 @@ function toggleSourceMode() {
     imageUrlPopoverOpen.value = false
     isSourceMode.value = true
   } else {
-    const safeHtml = sanitizePackageHtml(sourceHtml.value)
+    const safeHtml = sanitizePackageHtmlForStorage(sourceHtml.value)
     sourceHtml.value = safeHtml
     instance?.commands.setContent(safeHtml || '', { emitUpdate: false })
     emit('update:modelValue', safeHtml)

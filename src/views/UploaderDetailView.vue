@@ -23,7 +23,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { formatApiErrorMessage } from '@/api/auth'
 import { useSetBreadcrumbLabel } from '@/composables/useBreadcrumb'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { sanitizePackageHtmlForDisplay } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { toSafeHttpUrl } from '@/utils/format'
 import type { PackageSummary } from '@/types/models'
@@ -98,7 +98,7 @@ const editLocation = computed(() => {
 })
 
 const sanitizedBio = computed(() =>
-  sanitizePackageHtml(uploader.value?.Description),
+  sanitizePackageHtmlForDisplay(uploader.value?.Description),
 )
 
 const hasBioImages = computed(() => {

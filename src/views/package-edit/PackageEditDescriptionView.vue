@@ -9,7 +9,7 @@ import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/package
 import { updatePackage } from '@/api/packages'
 import { formatApiErrorMessage } from '@/api/auth'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { sanitizePackageHtmlForStorage } from '@/utils/sanitize'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
@@ -65,7 +65,7 @@ async function handleSave() {
 
   try {
     await updatePackage(pkgId, {
-      Description: sanitizePackageHtml(descriptionHtml.value),
+      Description: sanitizePackageHtmlForStorage(descriptionHtml.value),
     })
     if (packageId.value !== pkgId) return
     resetDirty()

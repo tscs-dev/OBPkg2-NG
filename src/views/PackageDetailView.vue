@@ -25,7 +25,7 @@ import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { formatApiErrorMessage } from '@/api/auth'
 import { useSetBreadcrumbLabel } from '@/composables/useBreadcrumb'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { sanitizePackageHtmlForDisplay } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { hasValidAuthor } from '@/utils/package'
 import { toSafeHttpUrl } from '@/utils/format'
@@ -103,14 +103,16 @@ const visibleFiles = computed(() =>
 const filesCount = computed(() => visibleFiles.value.length)
 
 const sanitizedDescription = computed(() =>
-  sanitizePackageHtml(pkg.value?.Description),
+  sanitizePackageHtmlForDisplay(pkg.value?.Description),
 )
 
 // 评论 iframe
 const commentLangMap: Record<string, string> = {
   'zh-CN': 'zh-cn',
+  'zh-TW': 'zh-tw', // TODO: This isn't in Hashover yet
   'en': 'en-us',
   'ja': 'ja-jp',
+  'ko': 'ko-kr'
 }
 
 const commentIframeSrc = computed(() => {

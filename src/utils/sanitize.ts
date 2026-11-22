@@ -79,20 +79,23 @@ export function sanitizeWikiHtml(rawHtml: string): string {
   return doc.body.innerHTML.trim()
 }
 
-/**
- * 清洗包详情中的用户富文本 HTML 描述
- */
-export function sanitizePackageHtml(rawHtml: string | undefined): string {
-  if (!rawHtml || !rawHtml.trim()) return ''
+/* ---- Package HTML helpers ---- */
 
+function purifyAndParse(rawHtml: string): Document | null {
   const cleaned = DOMPurify.sanitize(rawHtml, {
     FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
   })
+  if (!cleaned.trim()) return null
+  return new DOMParser().parseFromString(cleaned, 'text/html')
+}
 
-  const doc = new DOMParser().parseFromString(cleaned, 'text/html')
-
-  // 兜底移除编辑器残留的上传占位符
-  doc.querySelectorAll('.image-upload-placeholder').forEach((el) => el.remove())
+/**
+ * 展示数据库中的用户富文本 HTML（添加 target/rel/loading 等展示用属性）
+ */
+export function sanitizePackageHtmlForDisplay(rawHtml: string | undefined): string {
+  if (!rawHtml || !rawHtml.trim()) return ''
+  const doc = purifyAndParse(rawHtml)
+  if (!doc) return ''
 
   doc.querySelectorAll('a[href]').forEach((anchor) => {
     let href = (anchor.getAttribute('href') ?? '').trim()
@@ -113,6 +116,38 @@ export function sanitizePackageHtml(rawHtml: string | undefined): string {
       img.setAttribute('src', src)
     }
     img.setAttribute('loading', 'lazy')
+  })
+
+  return doc.body.innerHTML.trim()
+}
+
+/**
+ * 清洗编辑器输出的 HTML 用于存储（移除编辑器残留 & 仅展示用的属性）
+ */
+export function sanitizePackageHtmlForStorage(rawHtml: string | undefined): string {
+  if (!rawHtml || !rawHtml.trim()) return ''
+  const doc = purifyAndParse(rawHtml)
+  if (!doc) return ''
+
+  doc.querySelectorAll('.image-upload-placeholder').forEach((el) => el.remove())
+
+  doc.querySelectorAll('a[href]').forEach((anchor) => {
+    let href = (anchor.getAttribute('href') ?? '').trim()
+    if (href && !href.startsWith('https://') && !href.startsWith('http://') && !href.startsWith('mailto:') && !href.startsWith('#')) {
+      href = `https://${href}`
+      anchor.setAttribute('href', href)
+    }
+    anchor.removeAttribute('target')
+    anchor.removeAttribute('rel')
+  })
+
+  doc.querySelectorAll('img[src]').forEach((img) => {
+    let src = (img.getAttribute('src') ?? '').trim()
+    if (src && !src.startsWith('https://') && !src.startsWith('http://') && !src.startsWith('data:')) {
+      src = `https://${src}`
+      img.setAttribute('src', src)
+    }
+    img.removeAttribute('loading')
   })
 
   return doc.body.innerHTML.trim()

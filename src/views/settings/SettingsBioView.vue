@@ -9,7 +9,7 @@ import { updateUploaderProfile } from '@/api/uploaders'
 import { formatApiErrorMessage } from '@/api/auth'
 import { useSettingsTarget } from '@/composables/useSettingsTarget'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
-import { sanitizePackageHtml } from '@/utils/sanitize'
+import { sanitizePackageHtmlForStorage } from '@/utils/sanitize'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -63,7 +63,7 @@ async function handleSave() {
 
   try {
     await updateUploaderProfile(uid, {
-      Description: sanitizePackageHtml(bioHtml.value),
+      Description: sanitizePackageHtmlForStorage(bioHtml.value),
     })
     await invalidateUploader(uid)
     resetDirty()
