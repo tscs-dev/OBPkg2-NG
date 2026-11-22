@@ -64,7 +64,70 @@ const sortedFiles = computed(() => {
   </div>
 
   <div v-else class="space-y-4">
-    <div class="border border-border overflow-x-auto">
+    <!-- 移动端卡片布局（< sm） -->
+    <div class="sm:hidden space-y-3">
+      <div
+        v-for="file in sortedFiles"
+        :key="`card-${file.ID}`"
+        class="border border-border p-3 space-y-2"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-mono font-semibold text-foreground tabular-nums">
+              v{{ file.Version }}
+            </span>
+            <span
+              v-if="file.isLatestVersion"
+              class="px-1.5 py-0.5 text-[10px] font-semibold uppercase bg-primary/10 text-primary border border-primary/20"
+            >
+              {{ t('detail.downloadsLatest') }}
+            </span>
+          </div>
+          <Button
+            v-if="file.downloadUrl"
+            as-child
+            size="sm"
+            class="rounded-none shrink-0"
+          >
+            <a
+              :href="file.downloadUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink v-if="file.primaryPlatform === 'hmmsim'" class="size-3.5" />
+              <Download v-else class="size-3.5" />
+              <span>
+                {{
+                  file.primaryPlatform === 'hmmsim'
+                    ? t('detail.hmmsimInstallAction')
+                    : t('detail.downloadAction')
+                }}
+              </span>
+            </a>
+          </Button>
+          <Button
+            v-else
+            size="sm"
+            disabled
+            class="rounded-none shrink-0"
+          >
+            <Download class="size-3.5" />
+            <span>{{ t('common.unavailable') }}</span>
+          </Button>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <PlatformBadge :platforms="file.platforms" variant="label" />
+          <span class="tabular-nums">{{ file.Size }}</span>
+          <span class="inline-flex items-center gap-1">
+            <CheckCircle2 class="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>{{ t('common.validated') }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 桌面端表格布局（sm+） -->
+    <div class="hidden sm:block border border-border overflow-x-auto">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
           <tr class="bg-muted/45 border-b border-border text-xs sm:text-sm font-semibold text-muted-foreground">
@@ -109,11 +172,11 @@ const sortedFiles = computed(() => {
               <PlatformBadge :platforms="file.platforms" variant="label" />
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs sm:text-sm text-muted-foreground tabular-nums whitespace-nowrap">
+            <td class="py-2.5 px-3.5 text-sm text-muted-foreground tabular-nums whitespace-nowrap">
               {{ file.Size }}
             </td>
 
-            <td class="py-2.5 px-3.5 text-xs sm:text-sm whitespace-nowrap">
+            <td class="py-2.5 px-3.5 text-sm whitespace-nowrap">
               <span class="inline-flex items-center gap-1.5 text-muted-foreground">
                 <CheckCircle2 class="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{{ t('common.validated') }}</span>

@@ -64,7 +64,7 @@ const fullLocalDate = computed(() => formatLocalTimestamp(props.pkg.UpdatedAt))
       <div class="space-y-0.5 min-w-0">
         <PlatformBadge :platforms="pkg.Platforms" variant="tile" class="pt-1 float-end" />
         <div class="flex items-start justify-between gap-2">
-          <h3 class="text-[15px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors truncate">
+          <h3 class="text-[15px] font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
             {{ primaryName }}
           </h3>
         </div>

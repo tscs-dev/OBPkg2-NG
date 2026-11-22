@@ -337,11 +337,11 @@ watchEffect(() => {
             </template>
           </nav>
 
-          <!-- Publishing Checklist -->
+          <!-- Publishing Checklist（窄屏隐藏，减少侧栏堆叠高度） -->
           <template v-if="!isCreateMode && pkg">
-            <Separator />
+            <Separator class="hidden lg:block" />
 
-            <section class="space-y-2.5 px-1">
+            <section class="hidden lg:block space-y-2.5 px-1">
               <h2 class="text-sm font-semibold uppercase text-muted-foreground">
                 {{ t('packageEdit.checklist.title') }}
               </h2>
@@ -387,7 +387,7 @@ watchEffect(() => {
               </ul>
             </section>
 
-            <Separator />
+            <Separator class="hidden lg:block" />
 
             <router-link
               :to="`/packages/${packageId}`"

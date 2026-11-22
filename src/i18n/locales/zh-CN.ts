@@ -8,6 +8,7 @@ export default {
     packages: '作品目录',
     about: '关于',
     englishNames: 'English Names',
+    menu: '菜单',
     language: '语言',
     login: '登录',
     register: '注册',
@@ -459,7 +460,7 @@ export default {
       'HSRoutes 致力于为铁路模拟社区的内容创作者和使用者提供一个完善而易用的在线内容平台。',
     copyrightSectionTitle: '著作权与运营声明',
     copyrightBody1:
-      '本平台为个人维护的非营利性社区服务，无任何商业化收费计划，亦不接收捐助。平台所收录的第三方作品版权均归其各自原作者所有；若涉及著作权问题，请通过右侧支持邮箱与维护者联系处理。',
+      '本平台为个人维护的非营利性社区服务，无任何商业化收费计划，亦不接收捐助。平台所收录的第三方作品版权均归其各自原作者所有；若涉及著作权问题，请通过支持邮箱与维护者联系。',
     copyrightBody2:
       '本项目与 Jeminie Interactive 无关联。',
     ossLicenseTitle: '开放源代码软件许可证',

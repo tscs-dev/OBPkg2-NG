@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -11,6 +11,7 @@ import {
   Info,
   LogIn,
   LogOut,
+  Menu,
   Package,
   Plus,
   Settings,
@@ -41,6 +42,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import { Separator } from '@/components/ui/separator'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 const route = useRoute()
@@ -49,6 +57,7 @@ const { t } = useI18n()
 const preferences = usePreferencesStore()
 const authStore = useAuthStore()
 const { customItems, rightSummary } = useBreadcrumbState()
+const mobileMenuOpen = ref(false)
 
 const isModerator = computed(() => authStore.isLoggedIn && authStore.privilege >= 10)
 const pendingFilesQuery = usePendingFilesCountQuery(isModerator)
@@ -140,7 +149,17 @@ function handleLogout() {
               </span>
             </router-link>
 
-            <nav class="flex items-center h-12" aria-label="Main navigation">
+            <!-- 汉堡菜单按钮（仅 < sm 显示） -->
+            <button
+              type="button"
+              class="sm:hidden h-8 px-2 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/10 transition-colors cursor-pointer"
+              :aria-label="t('nav.menu')"
+              @click="mobileMenuOpen = true"
+            >
+              <Menu class="size-4" />
+            </button>
+
+            <nav class="hidden sm:flex items-center h-12" aria-label="Main navigation">
               <router-link
                 to="/"
                 class="relative h-full px-2 sm:px-3 flex items-center gap-1.5 text-[13px] font-medium transition-colors"
@@ -228,7 +247,7 @@ function handleLogout() {
               <DropdownMenuTrigger as-child>
                 <button
                   type="button"
-                  class="h-8 px-2.5 flex items-center gap-1.5 text-sm font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors cursor-pointer max-w-[170px]"
+                  class="h-8 px-2.5 flex items-center gap-1.5 text-sm font-medium bg-black/15 text-white hover:bg-black/25 border border-white/25 transition-colors cursor-pointer max-w-[120px] sm:max-w-[170px]"
                 >
                   <User class="size-3.5 shrink-0" />
                   <span class="truncate">{{ displayUsername }}</span>
@@ -304,6 +323,59 @@ function handleLogout() {
           </div>
         </div>
       </header>
+
+      <!-- 移动端导航抽屉 -->
+      <Sheet v-model:open="mobileMenuOpen">
+        <SheetContent side="left" class="w-64 p-0">
+          <SheetHeader class="px-5 pt-5 pb-3">
+            <SheetTitle class="text-sm font-bold tracking-tight">
+              {{ t('brand.title') }}
+            </SheetTitle>
+          </SheetHeader>
+          <Separator />
+          <nav class="flex flex-col py-2" aria-label="Mobile navigation">
+            <router-link
+              to="/"
+              class="px-5 py-2.5 flex items-center gap-3 text-sm font-medium transition-colors"
+              :class="
+                isNavActive('home')
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground/85 hover:bg-muted/80 hover:text-foreground'
+              "
+              @click="mobileMenuOpen = false"
+            >
+              <Home class="size-4 shrink-0" />
+              <span>{{ t('nav.home') }}</span>
+            </router-link>
+            <router-link
+              to="/packages"
+              class="px-5 py-2.5 flex items-center gap-3 text-sm font-medium transition-colors"
+              :class="
+                isNavActive('packages')
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground/85 hover:bg-muted/80 hover:text-foreground'
+              "
+              @click="mobileMenuOpen = false"
+            >
+              <Package class="size-4 shrink-0" />
+              <span>{{ t('nav.packages') }}</span>
+            </router-link>
+            <router-link
+              to="/about"
+              class="px-5 py-2.5 flex items-center gap-3 text-sm font-medium transition-colors"
+              :class="
+                isNavActive('about')
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-foreground/85 hover:bg-muted/80 hover:text-foreground'
+              "
+              @click="mobileMenuOpen = false"
+            >
+              <Info class="size-4 shrink-0" />
+              <span>{{ t('nav.about') }}</span>
+            </router-link>
+          </nav>
+        </SheetContent>
+      </Sheet>
 
       <!-- Breadcrumb 导航栏 -->
       <div class="h-9 bg-muted/35 border-b border-border shrink-0">
