@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQueries } from '@tanstack/vue-query'
@@ -7,8 +7,6 @@ import {
   AlertCircle,
   Check,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Download,
   Loader2,
@@ -25,7 +23,6 @@ import { packageKeys } from '@/queries/packages'
 import { fetchPackageDetail } from '@/api/packages'
 import type { FilePlatformFilter, FileValidationFilter } from '@/api/files'
 import { formatApiErrorMessage } from '@/api/auth'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import type { PackageDetail } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -42,6 +39,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 const PAGE_SIZE = 20
 
@@ -49,9 +54,6 @@ const route = useRoute()
 const router = useRouter()
 const { t, te } = useI18n()
 const preferences = usePreferencesStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
-
 const mobileSheetOpen = ref(false)
 const auditMenuRefs = ref<Record<number, InstanceType<typeof FileAuditMenu> | null>>({})
 
@@ -172,19 +174,6 @@ const displayEnd = computed(() =>
   total.value === 0 ? 0 : Math.min(page.value * PAGE_SIZE, total.value),
 )
 
-watchEffect(() => {
-  const summary =
-    filesQuery.data.value !== undefined
-      ? t('adminFiles.totalCount', { count: total.value })
-      : ''
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('adminFiles.title') },
-    ],
-    summary,
-  )
-})
 </script>
 
 <template>
@@ -278,14 +267,9 @@ watchEffect(() => {
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
             <template v-else-if="filesQuery.data.value && !filesQuery.isPlaceholderData.value">
-              <span v-if="total > 0">
-                {{
-                  t('packages.rangeSummary', {
-                    start: displayStart,
-                    end: displayEnd,
-                    total,
-                  })
-                }}
+              <span v-if="total > 0" class="inline-flex flex-wrap">
+                <span>{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
+                <span>{{ t('packages.rangeSummaryTotal', { total }) }}</span>
               </span>
               <span v-else>{{ t('adminFiles.totalCount', { count: 0 }) }}</span>
             </template>
@@ -519,37 +503,36 @@ watchEffect(() => {
         </div>
 
         <!-- 分页条 -->
-        <nav
+        <div
           v-if="totalPages > 1"
-          aria-label="Pagination"
           class="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 text-sm tabular-nums"
         >
-          <span class="text-muted-foreground">
+          <span class="hidden sm:block text-muted-foreground">
             {{ t('packages.paginationPage', { page, totalPages }) }}
           </span>
-          <div class="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              class="rounded-none h-8 px-2.5 cursor-pointer"
-              :disabled="page <= 1"
-              @click="updateFilters({ page: page - 1 })"
-            >
-              <ChevronLeft class="size-3.5" />
-              <span>{{ t('packages.paginationPrev') }}</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              class="rounded-none h-8 px-2.5 cursor-pointer"
-              :disabled="page >= totalPages"
-              @click="updateFilters({ page: page + 1 })"
-            >
-              <span>{{ t('packages.paginationNext') }}</span>
-              <ChevronRight class="size-3.5" />
-            </Button>
-          </div>
-        </nav>
+
+          <Pagination
+            v-slot="{ page: currentPage }"
+            class="w-auto mx-0"
+            :page="page"
+            :total="total"
+            :items-per-page="PAGE_SIZE"
+            :sibling-count="1"
+            show-edges
+            @update:page="(p: number) => updateFilters({ page: p })"
+          >
+            <PaginationContent v-slot="{ items: pageItems }">
+              <PaginationPrevious />
+              <template v-for="(item, index) in pageItems" :key="index">
+                <PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === currentPage">
+                  {{ item.value }}
+                </PaginationItem>
+                <PaginationEllipsis v-else :index="index" />
+              </template>
+              <PaginationNext />
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </SidebarLayout>
   </div>

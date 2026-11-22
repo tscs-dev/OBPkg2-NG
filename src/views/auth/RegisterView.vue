@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Mail } from '@lucide/vue'
@@ -8,14 +8,12 @@ import FormRow from '@/components/form/FormRow.vue'
 import { registerApi, formatApiErrorMessage } from '@/api/auth'
 import { normalizeApiError } from '@/api/client'
 import { formatLocalTimestamp } from '@/utils/date'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const route = useRoute()
 const { t, te } = useI18n()
-const { setBreadcrumb } = useBreadcrumbState()
 
 const loginRoute = computed(() => {
   const redirect = route.query.redirect
@@ -23,7 +21,6 @@ const loginRoute = computed(() => {
     ? { name: 'login' as const, query: { redirect } }
     : { name: 'login' as const }
 })
-usePageBreadcrumbCleanup()
 
 const email = ref('')
 const submittedOnce = ref(false)
@@ -63,15 +60,6 @@ async function handleSubmit() {
   }
 }
 
-watchEffect(() => {
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('auth.registerTitle') },
-    ],
-    '',
-  )
-})
 </script>
 
 <template>

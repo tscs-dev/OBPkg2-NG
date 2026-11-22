@@ -24,7 +24,7 @@ import { usePackageDetailQuery } from '@/queries/packages'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { formatApiErrorMessage } from '@/api/auth'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
+import { useSetBreadcrumbLabel } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { hasValidAuthor } from '@/utils/package'
@@ -46,8 +46,7 @@ const router = useRouter()
 const { t, te, locale } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
+const { setLabel } = useSetBreadcrumbLabel()
 
 const { copy, copied } = useClipboard({ copiedDuring: 1500 })
 const copiedField = ref<'identifier' | 'guid' | null>(null)
@@ -227,16 +226,7 @@ async function copyText(field: 'identifier' | 'guid', text: string) {
 }
 
 watchEffect(() => {
-  const label = primaryName.value || (packageId.value ? `#${packageId.value}` : t('packages.breadcrumb'))
-  const summary = pkg.value ? `#${pkg.value.ID}` : ''
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('packages.breadcrumb'), to: '/packages' },
-      { label },
-    ],
-    summary,
-  )
+  if (primaryName.value) setLabel(primaryName.value)
 })
 </script>
 

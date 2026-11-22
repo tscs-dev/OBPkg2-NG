@@ -6,11 +6,9 @@ import FormPanel from '@/components/form/FormPanel.vue'
 import FormRow from '@/components/form/FormRow.vue'
 import String3Fields from '@/components/form/String3Fields.vue'
 import { useAuthStore } from '@/stores/auth'
-import { usePreferencesStore } from '@/stores/preferences'
 import { useUploaderCacheActions, useUploaderDetailQuery } from '@/queries/uploaders'
 import { updateUploaderProfile } from '@/api/uploaders'
 import { formatApiErrorMessage } from '@/api/auth'
-import { buildWikiDocUrl } from '@/api/portal'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
 import { useSettingsTarget } from '@/composables/useSettingsTarget'
 import { useUnsavedChangesGuard } from '@/composables/useUnsavedChangesGuard'
@@ -20,7 +18,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 const { t, te } = useI18n()
 const authStore = useAuthStore()
-const preferences = usePreferencesStore()
 const { invalidateUploader } = useUploaderCacheActions()
 
 const { targetUserId } = useSettingsTarget()
@@ -81,10 +78,6 @@ const homepageError = computed(() => {
     return t('validation.urlInvalid')
   }
 })
-
-const packFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'packfields'),
-)
 
 async function handleSubmit() {
   if (!targetUserId.value || isSaving.value) return
@@ -156,18 +149,6 @@ async function handleSubmit() {
     <FormPanel
       :title="t('settings.profile.namePanelTitle')"
     >
-      <template #header-extra>
-        <a
-          :href="packFieldsDocUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-[11px] text-primary hover:underline underline-offset-4"
-        >
-          <span>{{ t('settings.profile.namingGuideLink') }}</span>
-          <ExternalLink class="size-3" />
-        </a>
-      </template>
-
       <String3Fields
         v-model="nameForm"
         id-prefix="profile-s3"

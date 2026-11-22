@@ -1,25 +1,11 @@
 <script setup lang="ts">
-import { watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, Compass, Home } from '@lucide/vue'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 
 const route = useRoute()
 const { t } = useI18n()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
-
-watchEffect(() => {
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: '404' },
-    ],
-    '404',
-  )
-})
 </script>
 
 <template>

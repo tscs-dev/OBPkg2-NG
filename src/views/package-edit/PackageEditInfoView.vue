@@ -274,25 +274,16 @@ async function handleDeletePackage() {
   <form novalidate class="space-y-5" @submit.prevent="handleSubmit">
     <!-- 唯一标识 -->
     <FormPanel :title="t('packageEdit.info.identPanelTitle')">
-      <template #header-extra>
-        <a
-          :href="packFieldsDocUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-[11px] text-primary hover:underline underline-offset-4"
-        >
-          <span>{{ t('settings.profile.namingGuideLink') }}</span>
-          <ExternalLink class="size-3" />
-        </a>
-      </template>
-
+      <div v-if="canModifyIdentifier" class="px-4 py-2 bg-muted/25 text-sm text-muted-foreground">
+        {{ t('packageEdit.info.identifierHint') }}
+      </div>
       <FormRow
         :label="t('packageEdit.info.identifierLabel')"
         html-for="pack-identifier"
         required
         :hint="
           canModifyIdentifier
-            ? t('packageEdit.info.identifierHint')
+            ? undefined
             : t('packageEdit.info.identifierLockedHint')
         "
         :error="identifierError"
@@ -317,6 +308,9 @@ async function handleDeletePackage() {
 
     <!-- 显示名称 -->
     <FormPanel :title="t('packageEdit.info.namePanelTitle')">
+      <div class="px-4 py-2 bg-muted/25 text-sm text-muted-foreground">
+        {{ t('packageEdit.info.nameHint') }}
+      </div>
       <String3Fields
         v-model="nameForm"
         id-prefix="pack-name"
@@ -327,6 +321,9 @@ async function handleDeletePackage() {
 
     <!-- 作品来源 -->
     <FormPanel :title="t('packageEdit.info.originPanelTitle')">
+      <div class="px-4 py-2 bg-muted/25 text-sm text-muted-foreground">
+        {{ t('packageEdit.info.originHint') }}
+      </div>
       <FormRow :label="t('packageEdit.info.originTypeLabel')" required>
         <div class="flex flex-wrap items-center gap-4 pt-1 text-[13px]">
           <label class="inline-flex items-center gap-2 cursor-pointer select-none">

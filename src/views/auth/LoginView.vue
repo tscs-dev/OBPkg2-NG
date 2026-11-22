@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQueryClient } from '@tanstack/vue-query'
@@ -9,7 +9,6 @@ import FormRow from '@/components/form/FormRow.vue'
 import { loginApi, setupSessionFromToken, formatApiErrorMessage } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { resolveSafeRedirect } from '@/router'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -19,9 +18,6 @@ const router = useRouter()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
 const queryClient = useQueryClient()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
-
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -79,15 +75,6 @@ async function handleSubmit() {
   }
 }
 
-watchEffect(() => {
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('auth.loginTitle') },
-    ],
-    '',
-  )
-})
 </script>
 
 <template>

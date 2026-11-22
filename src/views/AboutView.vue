@@ -1,30 +1,17 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ExternalLink, Globe, Mail } from '@lucide/vue'
 import SidebarLayout from '@/layouts/SidebarLayout.vue'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { formatLocalTimestamp } from '@/utils/date'
 import { Separator } from '@/components/ui/separator'
 
 const { t } = useI18n()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
 
 const appVersion = __APP_VERSION__
 const buildTimeFormatted = computed(() => formatLocalTimestamp(__BUILD_TIME__))
 const currentYear = new Date().getFullYear()
 const copyrightText = computed(() => t('about.copyright', { year: currentYear }))
-
-watchEffect(() => {
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('nav.about') },
-    ],
-    `v${appVersion}`,
-  )
-})
 </script>
 
 <template>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { cn } from 'cn'
+import { ImageOff } from '@lucide/vue'
+import imageOffBackgroundImage from '@/assets/image-off.webp'
 
 interface Props {
   thumbnail?: string
@@ -65,28 +67,11 @@ function handleError() {
     <!-- 无图或加载失败时的克制铁路几何占位图 -->
     <div
       v-else
-      class="size-full flex items-center justify-center bg-muted/50 text-muted-foreground/35"
+      class="size-full flex items-center justify-center bg-muted/50 bg-cover"
+      :style='{ backgroundImage: `url("${imageOffBackgroundImage}")` }'
       aria-hidden="true"
     >
-      <svg
-        viewBox="0 0 120 75"
-        fill="none"
-        class="w-3/4 h-3/4"
-      >
-        <path
-          d="M12 62 L48 16 M108 62 L72 16"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="square"
-        />
-        <path
-          d="M22 52 H98 M31 40 H89 M39 29 H81 M45 20 H75"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="square"
-          opacity="0.7"
-        />
-      </svg>
+      <ImageOff class="size-1/2 text-background" />
     </div>
   </div>
 </template>

@@ -24,6 +24,20 @@ export default defineConfig({
     },
   },
   build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-vue', test: /node_modules[\\/](vue|vue-router|vue-i18n|pinia|@vue)/, priority: 20 },
+            { name: 'vendor-ui', test: /node_modules[\\/](reka-ui|@floating-ui|class-variance-authority)/, priority: 15 },
+            { name: 'vendor-icons', test: /node_modules[\\/]@lucide/, priority: 15 },
+            { name: 'vendor-editor', test: /node_modules[\\/](@tiptap|prosemirror)/, priority: 15 },
+            { name: 'vendor', test: /node_modules/, priority: 10 },
+            { name: 'shared', test: /src\/(composables|utils|queries|api|config|layouts)\//, minShareCount: 2, priority: 1 },
+          ],
+        },
+      },
+    },
     license: {
       fileName: "about/licenses-frontend.md"
     }

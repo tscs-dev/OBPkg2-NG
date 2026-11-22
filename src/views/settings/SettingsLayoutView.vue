@@ -7,7 +7,6 @@ import SidebarLayout from '@/layouts/SidebarLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useUploaderDetailQuery } from '@/queries/uploaders'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { useSettingsTarget } from '@/composables/useSettingsTarget'
 import { Separator } from '@/components/ui/separator'
 
@@ -16,8 +15,6 @@ const router = useRouter()
 const { t } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
 
 const { targetUserId, isEditingOther, uidQuery: targetQuery } = useSettingsTarget()
 
@@ -73,18 +70,6 @@ const navItems = computed(() => {
   return list
 })
 
-watchEffect(() => {
-  const currentTabLabel =
-    navItems.value.find((item) => item.name === route.name)?.label ?? t('settings.breadcrumb')
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('settings.breadcrumb'), to: '/settings/profile' },
-      { label: currentTabLabel },
-    ],
-    targetUserId.value ? `#${targetUserId.value}` : '',
-  )
-})
 </script>
 
 <template>

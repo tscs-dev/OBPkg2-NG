@@ -22,7 +22,7 @@ import { SUPPORTED_LOCALES } from '@/i18n'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { usePendingFilesCountQuery } from '@/queries/files'
-import { useBreadcrumbState, type BreadcrumbItemData } from '@/composables/useBreadcrumb'
+import { useBreadcrumb } from '@/composables/useBreadcrumb'
 import type { SupportedLocale } from '@/api/portal'
 import {
   Breadcrumb,
@@ -56,7 +56,7 @@ const router = useRouter()
 const { t } = useI18n()
 const preferences = usePreferencesStore()
 const authStore = useAuthStore()
-const { customItems, rightSummary } = useBreadcrumbState()
+const { items: breadcrumbItems } = useBreadcrumb()
 const mobileMenuOpen = ref(false)
 
 const isModerator = computed(() => authStore.isLoggedIn && authStore.privilege >= 10)
@@ -76,35 +76,6 @@ const loginLocation = computed(() => {
     name: 'login' as const,
     query: route.fullPath && route.fullPath !== '/' ? { redirect: route.fullPath } : undefined,
   }
-})
-
-const breadcrumbItems = computed<BreadcrumbItemData[]>(() => {
-  if (customItems.value && customItems.value.length > 0) {
-    return customItems.value
-  }
-  if (route.name === 'home') {
-    return [{ label: t('nav.home') }]
-  }
-  if (route.name === 'packages') {
-    return [{ label: t('nav.home'), to: '/' }, { label: t('nav.packages') }]
-  }
-  if (route.name === 'package-detail') {
-    return [
-      { label: t('nav.home'), to: '/' },
-      { label: t('packages.breadcrumb'), to: '/packages' },
-      { label: `#${String(route.params.id ?? '')}` },
-    ]
-  }
-  if (route.name === 'uploader-detail') {
-    return [
-      { label: t('nav.home'), to: '/' },
-      { label: `${t('uploader.breadcrumb')} #${String(route.params.id ?? '')}` },
-    ]
-  }
-  if (route.name === 'about') {
-    return [{ label: t('nav.home'), to: '/' }, { label: t('nav.about') }]
-  }
-  return [{ label: t('nav.home'), to: '/' }]
 })
 
 function isNavActive(target: 'home' | 'packages' | 'about'): boolean {
@@ -397,13 +368,6 @@ function handleLogout() {
               </template>
             </BreadcrumbList>
           </Breadcrumb>
-
-          <div
-            v-if="rightSummary"
-            class="text-sm text-muted-foreground tabular-nums shrink-0 hidden sm:block"
-          >
-            {{ rightSummary }}
-          </div>
         </div>
       </div>
 

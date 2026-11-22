@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQueryClient } from '@tanstack/vue-query'
@@ -16,7 +16,6 @@ import {
 } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { hasTrimIssues, isString3Valid, normalizeString3ForSubmit, validateString3 } from '@/utils/string3'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import type { String3 } from '@/types/models'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,8 +25,6 @@ const router = useRouter()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
 const queryClient = useQueryClient()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
 
 const tokenParam = computed(() => String(route.params.token ?? ''))
 
@@ -142,15 +139,6 @@ async function handleSubmit() {
   }
 }
 
-watchEffect(() => {
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('auth.activateTitle') },
-    ],
-    '',
-  )
-})
 </script>
 
 <template>

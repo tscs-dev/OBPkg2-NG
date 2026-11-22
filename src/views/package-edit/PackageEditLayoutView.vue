@@ -22,7 +22,7 @@ import { usePreferencesStore } from '@/stores/preferences'
 import { usePackageDetailQuery } from '@/queries/packages'
 import { hasSubstantialHtmlContent, parsePositiveIntParam } from '@/utils/format'
 import { formatApiErrorMessage } from '@/api/auth'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
+import { useSetBreadcrumbLabel } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,8 +32,7 @@ const router = useRouter()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
 const preferences = usePreferencesStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
+const { setLabel } = useSetBreadcrumbLabel()
 
 const isCreateMode = computed(() => route.name === 'package-new')
 
@@ -151,28 +150,9 @@ const checklistItems = computed(() => {
 })
 
 watchEffect(() => {
-  if (isCreateMode.value) {
-    setBreadcrumb(
-      [
-        { label: t('nav.home'), to: '/' },
-        { label: t('packages.breadcrumb'), to: '/packages' },
-        { label: t('packageEdit.newTitle') },
-      ],
-      '',
-    )
-    return
+  if (!isCreateMode.value && displayTitle.value) {
+    setLabel(displayTitle.value)
   }
-
-  const label = displayTitle.value || `#${packageId.value ?? ''}`
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('packages.breadcrumb'), to: '/packages' },
-      { label, to: packageId.value ? `/packages/${packageId.value}` : undefined },
-      { label: t('packageEdit.editBreadcrumb') },
-    ],
-    packageId.value ? `#${packageId.value}` : '',
-  )
 })
 </script>
 

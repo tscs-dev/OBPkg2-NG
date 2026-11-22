@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   ArrowRight,
@@ -18,19 +18,12 @@ import { useSiteStatsQuery, useWikiDocQuery } from '@/queries/portal'
 import { buildWikiDocUrl } from '@/api/portal'
 import { ENV } from '@/config/env'
 import { usePreferencesStore } from '@/stores/preferences'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const { t } = useI18n()
 const preferences = usePreferencesStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
-
-watchEffect(() => {
-  setBreadcrumb([{ label: t('nav.home') }], '')
-})
 
 // 两栏公告：面向用户 (bcs-doc:status) & 面向创作者 (bcs-doc:ann-uploader)
 // 优先使用用户语言，非中文时 fallback 到 zh-CN

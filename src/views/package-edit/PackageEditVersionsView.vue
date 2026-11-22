@@ -7,19 +7,16 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  ExternalLink,
   Loader2,
   Pencil,
   Plus,
   Trash2,
 } from '@lucide/vue'
 import PlatformBadge from '@/components/package/PlatformBadge.vue'
-import { usePreferencesStore } from '@/stores/preferences'
 import { usePackageCacheActions, usePackageDetailQuery } from '@/queries/packages'
 import { useFileCacheActions } from '@/queries/files'
 import { deleteFile } from '@/api/files'
 import { formatApiErrorMessage } from '@/api/auth'
-import { buildWikiDocUrl } from '@/api/portal'
 import { sortPackageFiles } from '@/utils/package'
 import type { PackageFile } from '@/types/models'
 import { Button } from '@/components/ui/button'
@@ -39,7 +36,6 @@ import {
 
 const route = useRoute()
 const { t, te } = useI18n()
-const preferences = usePreferencesStore()
 const { invalidatePackage, invalidatePackageLists } = usePackageCacheActions()
 const { invalidateFiles } = useFileCacheActions()
 
@@ -53,10 +49,6 @@ const packageQuery = usePackageDetailQuery(packageId)
 
 const sortedFiles = computed(() =>
   sortPackageFiles(packageQuery.data.value?.Files ?? []),
-)
-
-const fileFieldsDocUrl = computed(() =>
-  buildWikiDocUrl(preferences.locale, 'filefields'),
 )
 
 const deleteTarget = ref<PackageFile | null>(null)
@@ -97,15 +89,6 @@ async function confirmDeleteFile() {
           {{ t('packageEdit.versions.listTitle') }}
         </span>
         <span class="tabular-nums">({{ sortedFiles.length }})</span>
-        <a
-          :href="fileFieldsDocUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-primary hover:underline underline-offset-4"
-        >
-          <span>{{ t('settings.profile.namingGuideLink') }}</span>
-          <ExternalLink class="size-3" />
-        </a>
       </div>
 
       <Button as-child size="sm" class="rounded-none">

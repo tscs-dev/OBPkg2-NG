@@ -22,7 +22,7 @@ import { useUploaderDetailQuery } from '@/queries/uploaders'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useAuthStore } from '@/stores/auth'
 import { formatApiErrorMessage } from '@/api/auth'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
+import { useSetBreadcrumbLabel } from '@/composables/useBreadcrumb'
 import { sanitizePackageHtml } from '@/utils/sanitize'
 import { formatDateShort, formatLocalTimestamp } from '@/utils/date'
 import { toSafeHttpUrl } from '@/utils/format'
@@ -46,8 +46,7 @@ const router = useRouter()
 const { t, te } = useI18n()
 const preferences = usePreferencesStore()
 const authStore = useAuthStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
+const { setLabel } = useSetBreadcrumbLabel()
 
 const uploaderId = computed<number | null>(() => {
   const raw = String(route.params.id ?? '')
@@ -302,17 +301,7 @@ function handleProseClick(e: MouseEvent) {
 }
 
 watchEffect(() => {
-  const label =
-    primaryName.value ||
-    (uploaderId.value ? `${t('uploader.breadcrumb')} #${uploaderId.value}` : t('uploader.breadcrumb'))
-  const summary = uploader.value ? `#${uploader.value.ID}` : ''
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label },
-    ],
-    summary,
-  )
+  if (primaryName.value) setLabel(primaryName.value)
 })
 </script>
 

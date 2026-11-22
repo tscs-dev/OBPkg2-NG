@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   Plus,
   RefreshCw,
@@ -18,7 +16,6 @@ import { usePackagesQuery } from '@/queries/packages'
 import type { PlatformFilter } from '@/api/packages'
 import { useAuthStore } from '@/stores/auth'
 import { formatApiErrorMessage } from '@/api/auth'
-import { useBreadcrumbState, usePageBreadcrumbCleanup } from '@/composables/useBreadcrumb'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -28,6 +25,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 const PAGE_SIZE = 20
 
@@ -35,9 +40,6 @@ const route = useRoute()
 const router = useRouter()
 const { t, te } = useI18n()
 const authStore = useAuthStore()
-const { setBreadcrumb } = useBreadcrumbState()
-usePageBreadcrumbCleanup()
-
 const mobileSheetOpen = ref(false)
 
 function parsePlatformQuery(raw: unknown): PlatformFilter {
@@ -136,37 +138,9 @@ const displayEnd = computed(() =>
   total.value === 0 ? 0 : Math.min(page.value * PAGE_SIZE, total.value),
 )
 
-watchEffect(() => {
-  const summary =
-    packagesQuery.data.value !== undefined
-      ? t('packages.totalCount', { count: total.value })
-      : ''
-  setBreadcrumb(
-    [
-      { label: t('nav.home'), to: '/' },
-      { label: t('packages.breadcrumb') },
-    ],
-    summary,
-  )
-})
-
-const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
-  const count = totalPages.value
-  const current = page.value
-  if (count <= 7) {
-    return Array.from({ length: count }, (_, idx) => idx + 1)
-  }
-  const tokens: (number | 'ellipsis')[] = [1]
-  const left = Math.max(2, current - 1)
-  const right = Math.min(count - 1, current + 1)
-  if (left > 2) tokens.push('ellipsis')
-  for (let p = left; p <= right; p++) {
-    tokens.push(p)
-  }
-  if (right < count - 1) tokens.push('ellipsis')
-  tokens.push(count)
-  return tokens
-})
+function handlePageUpdate(newPage: number) {
+  goToPage(newPage)
+}
 </script>
 
 <template>
@@ -191,14 +165,9 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
             <template v-else-if="packagesQuery.data.value && !packagesQuery.isPlaceholderData.value">
-              <span v-if="total > 0">
-                {{
-                  t('packages.rangeSummary', {
-                    start: displayStart,
-                    end: displayEnd,
-                    total,
-                  })
-                }}
+              <span v-if="total > 0" class="inline-flex flex-wrap">
+                <span>{{ t('packages.rangeSummaryItems', { start: displayStart, end: displayEnd }) }}</span>
+                <span>{{ t('packages.rangeSummaryTotal', { total }) }}</span>
               </span>
               <span v-else>{{ t('packages.totalCount', { count: 0 }) }}</span>
             </template>
@@ -210,6 +179,30 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
           </div>
 
           <div class="flex items-center gap-2">
+            <!-- 宽屏顶部翻页 -->
+            <Pagination
+              v-if="totalPages > 1"
+              v-slot="{ page: currentPage }"
+              class="hidden lg:flex w-auto mx-0"
+              :page="page"
+              :total="total"
+              :items-per-page="PAGE_SIZE"
+              :sibling-count="1"
+              show-edges
+              @update:page="handlePageUpdate"
+            >
+              <PaginationContent v-slot="{ items: pageItems }">
+                <PaginationPrevious />
+                <template v-for="(item, index) in pageItems" :key="index">
+                  <PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === currentPage">
+                    {{ item.value }}
+                  </PaginationItem>
+                  <PaginationEllipsis v-else :index="index" />
+                </template>
+                <PaginationNext />
+              </PaginationContent>
+            </Pagination>
+
             <Button
               v-if="authStore.isLoggedIn && authStore.privilege >= 0"
               as-child
@@ -338,59 +331,37 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
           />
         </div>
 
-        <!-- 分页条 -->
-        <nav
+        <!-- 底部分页 -->
+        <div
           v-if="totalPages > 1"
-          aria-label="Pagination"
           class="mt-6 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3"
         >
-          <span class="text-sm text-muted-foreground tabular-nums">
+          <span class="hidden sm:block text-sm text-muted-foreground tabular-nums">
             {{ t('packages.paginationPage', { page, totalPages }) }}
           </span>
 
-          <div class="flex items-center gap-1 tabular-nums">
-            <Button
-              variant="outline"
-              size="sm"
-              class="rounded-none h-8 px-2.5 cursor-pointer"
-              :disabled="page <= 1"
-              @click="goToPage(page - 1)"
-            >
-              <ChevronLeft class="size-3.5" />
-              <span class="hidden sm:inline">{{ t('packages.paginationPrev') }}</span>
-            </Button>
-
-            <template v-for="(token, idx) in paginationTokens" :key="`${idx}-${token}`">
-              <span
-                v-if="token === 'ellipsis'"
-                class="px-2 text-sm text-muted-foreground select-none"
-              >
-                …
-              </span>
-              <Button
-                v-else
-                :variant="token === page ? 'default' : 'outline'"
-                size="sm"
-                class="rounded-none h-8 min-w-8 px-2 cursor-pointer"
-                :aria-current="token === page ? 'page' : undefined"
-                @click="goToPage(token)"
-              >
-                {{ token }}
-              </Button>
-            </template>
-
-            <Button
-              variant="outline"
-              size="sm"
-              class="rounded-none h-8 px-2.5 cursor-pointer"
-              :disabled="page >= totalPages"
-              @click="goToPage(page + 1)"
-            >
-              <span class="hidden sm:inline">{{ t('packages.paginationNext') }}</span>
-              <ChevronRight class="size-3.5" />
-            </Button>
-          </div>
-        </nav>
+          <Pagination
+            v-slot="{ page: currentPage }"
+            class="w-auto mx-0"
+            :page="page"
+            :total="total"
+            :items-per-page="PAGE_SIZE"
+            :sibling-count="1"
+            show-edges
+            @update:page="handlePageUpdate"
+          >
+            <PaginationContent v-slot="{ items: pageItems }">
+              <PaginationPrevious />
+              <template v-for="(item, index) in pageItems" :key="index">
+                <PaginationItem v-if="item.type === 'page'" :value="item.value" :is-active="item.value === currentPage">
+                  {{ item.value }}
+                </PaginationItem>
+                <PaginationEllipsis v-else :index="index" />
+              </template>
+              <PaginationNext />
+            </PaginationContent>
+          </Pagination>
+        </div>
       </div>
     </SidebarLayout>
   </div>
