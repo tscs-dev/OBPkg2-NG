@@ -44,7 +44,13 @@ authStore.registerSessionExpiryHandler(() => {
 authStore.registerStorageLogoutHandler(() => {
   const current = router.currentRoute.value
   if (current.meta.requiresAuth) {
-    void router.replace({ name: 'home' })
+    void router.replace({
+      name: 'login',
+      query: {
+        redirect: current.fullPath,
+        reason: 'expired',
+      },
+    })
   }
 })
 

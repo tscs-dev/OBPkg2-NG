@@ -114,6 +114,7 @@ watch(
       storagePath.value = file.URLParam ?? ''
       fileSize.value = file.Size ?? ''
     } else {
+      resetDirty()
       suppressDirty = false
       return
     }
@@ -216,6 +217,7 @@ async function performSave() {
       }
     } else if (fId) {
       await updateFile(fId, payload)
+      if (fileId.value !== fId) return
       resetDirty()
       await invalidatePackage(pkgId)
       await invalidatePackageLists()
@@ -224,6 +226,7 @@ async function performSave() {
       saveSuccess.value = true
     }
   } catch (err) {
+    if (fId && fileId.value !== fId) return
     saveError.value = formatApiErrorMessage(err, t, te)
   } finally {
     isSaving.value = false
@@ -264,6 +267,7 @@ function handleAuditUpdated() {
 }
 
 function handleAuditDeleted() {
+  resetDirty()
   if (packageId.value) {
     void router.replace(`/packages/${packageId.value}/edit/versions`)
   }

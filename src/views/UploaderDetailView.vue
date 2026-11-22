@@ -318,9 +318,9 @@ watchEffect(() => {
 
 <template>
   <div>
-    <!-- 错误态 -->
+    <!-- 错误态（仅在没有可用缓存数据时整页显示） -->
     <div
-      v-if="uploaderId === null || uploaderQuery.isError.value"
+      v-if="uploaderId === null || (uploaderQuery.isError.value && !uploader)"
       class="max-w-7xl mx-auto px-4 sm:px-6 py-10"
     >
       <div class="border border-border bg-muted/30 p-6 max-w-xl space-y-3">
@@ -382,6 +382,25 @@ watchEffect(() => {
 
     <!-- 作者主页主体 -->
     <template v-else-if="uploader">
+      <!-- 刷新失败但仍有缓存数据时的内联错误提示 -->
+      <div
+        v-if="uploaderQuery.isError.value"
+        class="bg-destructive/8 border-b border-destructive/30"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-sm">
+          <span class="text-destructive">{{ uploaderErrorMessage || t('errors.network') }}</span>
+          <Button
+            variant="outline"
+            size="xs"
+            class="rounded-none shrink-0 cursor-pointer"
+            @click="() => uploaderQuery.refetch()"
+          >
+            <RefreshCw class="size-3" />
+            <span>{{ t('common.retry') }}</span>
+          </Button>
+        </div>
+      </div>
+
       <!-- 全宽创作者标题带 -->
       <section class="bg-muted/35 border-b border-border">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

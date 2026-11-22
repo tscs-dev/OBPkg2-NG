@@ -113,7 +113,7 @@ const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)
 watch(
   [totalPages, () => filesQuery.data.value],
   ([tp, data]) => {
-    if (data && page.value > tp) {
+    if (data && !filesQuery.isPlaceholderData.value && page.value > tp) {
       updateFilters({ page: tp })
     }
   },
@@ -277,7 +277,7 @@ watchEffect(() => {
             <template v-if="filesQuery.isPending.value">
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
-            <template v-else-if="filesQuery.data.value">
+            <template v-else-if="filesQuery.data.value && !filesQuery.isPlaceholderData.value">
               <span v-if="total > 0">
                 {{
                   t('packages.rangeSummary', {
@@ -457,7 +457,7 @@ watchEffect(() => {
                     <span>{{ t('common.validationPending') }}</span>
                   </span>
                   <span
-                    v-else
+                    v-else-if="!file.NeedValidation || file.Validated"
                     class="inline-flex items-center gap-1 text-muted-foreground whitespace-nowrap"
                   >
                     <CheckCircle2 class="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -493,7 +493,7 @@ watchEffect(() => {
 
                     <!-- 高频快捷通过按钮 -->
                     <Button
-                      v-if="!file.Validated"
+                      v-if="file.NeedValidation && !file.Validated"
                       type="button"
                       size="xs"
                       class="rounded-none cursor-pointer"

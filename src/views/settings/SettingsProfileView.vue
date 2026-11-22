@@ -103,6 +103,7 @@ async function handleSubmit() {
       Name: normalizeString3ForSubmit(nameForm.value),
       Homepage: homepageForm.value.trim(),
     })
+    if (targetUserId.value !== uid) return
 
     if (authStore.currentUserId === uid) {
       authStore.updateProfile(JSON.parse(JSON.stringify(updated)))
@@ -111,6 +112,7 @@ async function handleSubmit() {
     resetDirty()
     saveSuccess.value = true
   } catch (err) {
+    if (targetUserId.value !== uid) return
     saveError.value = formatApiErrorMessage(err, t, te)
   } finally {
     isSaving.value = false

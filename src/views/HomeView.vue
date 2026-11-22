@@ -145,7 +145,7 @@ const announcementCards = computed(() => [
               </div>
 
               <div
-                v-else-if="card.query.isError.value"
+                v-else-if="card.query.isError.value && !card.query.data.value?.html"
                 class="h-full flex flex-col items-start justify-center gap-2.5 text-muted-foreground"
               >
                 <p class="leading-relaxed">{{ t('home.wikiErrorDesc') }}</p>
@@ -224,7 +224,7 @@ const announcementCards = computed(() => [
           </div>
 
           <div
-            v-else-if="recentQuery.isError.value"
+            v-else-if="recentQuery.isError.value && !recentQuery.data.value"
             class="border border-border bg-muted/30 p-4 flex items-center justify-between gap-4"
           >
             <p class="text-sm text-muted-foreground">

@@ -77,16 +77,18 @@ async function processFileUpload(file: File) {
     return
   }
   const seq = ++uploadSeq
+  const capturedId = packageId.value
   isUploading.value = true
   errorMsg.value = ''
   saveSuccess.value = false
+  markDirty()
   try {
     const result = await uploadImageToLsky(file)
-    if (seq !== uploadSeq) return
+    if (seq !== uploadSeq || packageId.value !== capturedId) return
     thumbnail.value = result.fullUrl
     thumbnailLq.value = result.thumbUrl
   } catch (err) {
-    if (seq !== uploadSeq) return
+    if (seq !== uploadSeq || packageId.value !== capturedId) return
     errorMsg.value = err instanceof Error ? err.message : t('editor.uploadError')
   } finally {
     if (seq === uploadSeq) {
@@ -131,11 +133,13 @@ async function handleSave() {
       Thumbnail: thumbnail.value.trim(),
       ThumbnailLQ: thumbnail.value.trim() ? thumbnailLq.value.trim() : '',
     })
+    if (packageId.value !== pkgId) return
     resetDirty()
     await invalidatePackage(pkgId)
     await invalidatePackageLists()
     saveSuccess.value = true
   } catch (err) {
+    if (packageId.value !== pkgId) return
     errorMsg.value = formatApiErrorMessage(err, t, te)
   } finally {
     isSaving.value = false

@@ -246,6 +246,7 @@ export const useAuthStore = defineStore('auth', () => {
           persistToken(res.token)
           return res.token
         }
+        scheduleProactiveRefresh()
         return latestStored
       } catch (err) {
         const currentStored = readStoredToken()
@@ -257,8 +258,12 @@ export const useAuthStore = defineStore('auth', () => {
           expireSession()
           return null
         }
-        // 网络/5xx 错误：保留未过期的 token
-        return isTokenExpired(latestStored) ? null : latestStored
+        // 网络/5xx 错误：保留未过期的 token，重新排定刷新
+        if (!isTokenExpired(latestStored)) {
+          scheduleProactiveRefresh()
+          return latestStored
+        }
+        return null
       }
     }
 

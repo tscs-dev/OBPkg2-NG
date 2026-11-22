@@ -242,9 +242,9 @@ watchEffect(() => {
 
 <template>
   <div>
-    <!-- 无效 ID 或加载错误态 -->
+    <!-- 无效 ID 或加载错误态（仅在没有可用缓存数据时整页显示） -->
     <div
-      v-if="packageId === null || detailQuery.isError.value"
+      v-if="packageId === null || (detailQuery.isError.value && !pkg)"
       class="max-w-7xl mx-auto px-4 sm:px-6 py-10"
     >
       <div class="border border-border bg-muted/30 p-6 max-w-xl space-y-3">
@@ -310,6 +310,25 @@ watchEffect(() => {
 
     <!-- 详情主体 -->
     <template v-else-if="pkg">
+      <!-- 刷新失败但仍有缓存数据时的内联错误提示 -->
+      <div
+        v-if="detailQuery.isError.value"
+        class="bg-destructive/8 border-b border-destructive/30"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 text-sm">
+          <span class="text-destructive">{{ detailErrorMessage || t('errors.network') }}</span>
+          <Button
+            variant="outline"
+            size="xs"
+            class="rounded-none shrink-0 cursor-pointer"
+            @click="() => detailQuery.refetch()"
+          >
+            <RefreshCw class="size-3" />
+            <span>{{ t('common.retry') }}</span>
+          </Button>
+        </div>
+      </div>
+
       <!-- 全宽标题部分 -->
       <section class="bg-muted/35 border-b border-border">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">

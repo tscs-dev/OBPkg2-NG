@@ -241,8 +241,9 @@ watchEffect(() => {
               id="activate-password"
               v-model="password"
               :type="showPassword ? 'text' : 'password'"
+              :disabled="isSubmitting"
               autocomplete="new-password"
-              class="w-full h-8 pl-2.5 pr-8 text-[13px] bg-background border border-input focus:border-primary focus:outline-none"
+              class="w-full h-8 pl-2.5 pr-8 text-[13px] bg-background border border-input focus:border-primary focus:outline-none disabled:opacity-60"
               :class="passwordError ? 'border-destructive focus:border-destructive' : ''"
             />
             <button
@@ -268,8 +269,9 @@ watchEffect(() => {
             id="activate-confirm-password"
             v-model="confirmPassword"
             :type="showPassword ? 'text' : 'password'"
+            :disabled="isSubmitting"
             autocomplete="new-password"
-            class="w-full h-8 px-2.5 text-[13px] bg-background border border-input focus:border-primary focus:outline-none"
+            class="w-full h-8 px-2.5 text-[13px] bg-background border border-input focus:border-primary focus:outline-none disabled:opacity-60"
             :class="confirmPasswordError ? 'border-destructive focus:border-destructive' : ''"
           />
         </FormRow>
@@ -279,6 +281,7 @@ watchEffect(() => {
           id-prefix="activate-s3"
           stacked
           :show-errors="submittedOnce"
+          :disabled="isSubmitting"
         />
 
         <template #footer>

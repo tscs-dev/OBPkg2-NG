@@ -31,6 +31,11 @@ const serverError = ref('')
 
 const isExpiredRedirect = computed(() => route.query.reason === 'expired')
 
+// 登录页已有自己的过期横幅，清掉顶栏的重复提示
+if (isExpiredRedirect.value) {
+  authStore.dismissExpiredNotice()
+}
+
 const emailError = computed(() => {
   if (!submittedOnce.value) return null
   const val = email.value.trim()

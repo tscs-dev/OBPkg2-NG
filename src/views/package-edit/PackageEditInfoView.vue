@@ -230,6 +230,7 @@ async function handleSubmit() {
       }
     } else if (currentPkgId) {
       const updated = await updatePackage(currentPkgId, payload)
+      if (packageId.value !== currentPkgId) return
       resetDirty()
       await invalidatePackageLists()
       await invalidatePackage(updated.ID)
@@ -240,6 +241,7 @@ async function handleSubmit() {
       }
     }
   } catch (err) {
+    if (packageId.value !== currentPkgId) return
     saveError.value = formatApiErrorMessage(err, t, te)
   } finally {
     isSaving.value = false

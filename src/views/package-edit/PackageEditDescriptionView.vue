@@ -67,10 +67,12 @@ async function handleSave() {
     await updatePackage(pkgId, {
       Description: sanitizePackageHtml(descriptionHtml.value),
     })
+    if (packageId.value !== pkgId) return
     resetDirty()
     await invalidatePackage(pkgId)
     saveSuccess.value = true
   } catch (err) {
+    if (packageId.value !== pkgId) return
     saveError.value = formatApiErrorMessage(err, t, te)
   } finally {
     isSaving.value = false

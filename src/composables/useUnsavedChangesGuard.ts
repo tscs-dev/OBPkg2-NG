@@ -1,5 +1,5 @@
 import { ref, onBeforeUnmount, type Ref } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 /**
@@ -7,7 +7,7 @@ import { useI18n } from 'vue-i18n'
  *
  * - `isDirty`: 由调用方在表单值变化时设为 true，保存成功后 reset。
  * - `markDirty()` / `resetDirty()`: 便捷方法。
- * - `onBeforeRouteLeave` + `beforeunload` 双重拦截。
+ * - `onBeforeRouteLeave` + `onBeforeRouteUpdate` + `beforeunload` 三重拦截。
  */
 export function useUnsavedChangesGuard(dirtyRef?: Ref<boolean>) {
   const isDirty = dirtyRef ?? ref(false)
@@ -21,11 +21,14 @@ export function useUnsavedChangesGuard(dirtyRef?: Ref<boolean>) {
     isDirty.value = false
   }
 
-  onBeforeRouteLeave(() => {
+  const confirmLeave = () => {
     if (isDirty.value) {
       return window.confirm(t('common.unsavedChangesWarning'))
     }
-  })
+  }
+
+  onBeforeRouteLeave(confirmLeave)
+  onBeforeRouteUpdate(confirmLeave)
 
   function onBeforeUnloadHandler(e: BeforeUnloadEvent) {
     if (isDirty.value) {

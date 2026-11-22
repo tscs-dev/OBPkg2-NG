@@ -157,8 +157,11 @@ const editor = useEditor({
     },
     handlePaste(_view, event) {
       const items = Array.from(event.clipboardData?.items ?? [])
+      const hasText = items.some(
+        (item) => item.type === 'text/html' || item.type === 'text/plain',
+      )
       const imageItems = items.filter((item) => item.type.startsWith('image/'))
-      if (!imageItems.length) return false
+      if (hasText || !imageItems.length) return false
 
       event.preventDefault()
       for (const item of imageItems) {

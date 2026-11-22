@@ -128,6 +128,7 @@ export default {
       validationStatus: '审核状态',
       validated: '已验证',
       pendingValidation: '等待验证',
+      guid: 'GUID',
     },
     notFoundTitle: '未能读取该作品',
     invalidIdTitle: '无效的作品编号',

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { AlertCircle, CheckCircle2, Loader2, Mail } from '@lucide/vue'
 import FormPanel from '@/components/form/FormPanel.vue'
@@ -12,8 +13,16 @@ import { Button } from '@/components/ui/button'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+const route = useRoute()
 const { t, te } = useI18n()
 const { setBreadcrumb } = useBreadcrumbState()
+
+const loginRoute = computed(() => {
+  const redirect = route.query.redirect
+  return redirect
+    ? { name: 'login' as const, query: { redirect } }
+    : { name: 'login' as const }
+})
 usePageBreadcrumbCleanup()
 
 const email = ref('')
@@ -94,7 +103,7 @@ watchEffect(() => {
 
       <template #footer>
         <Button as-child variant="outline" size="sm" class="w-full rounded-none">
-          <router-link to="/auth/login">{{ t('auth.goLogin') }}</router-link>
+          <router-link :to="loginRoute">{{ t('auth.goLogin') }}</router-link>
         </Button>
       </template>
     </FormPanel>
@@ -116,7 +125,7 @@ watchEffect(() => {
           </div>
           <div v-if="showGoLoginHint" class="pl-6">
             <router-link
-              to="/auth/login"
+              :to="loginRoute"
               class="font-medium text-primary hover:underline underline-offset-4"
             >
               {{ t('auth.goLogin') }}
@@ -160,7 +169,7 @@ watchEffect(() => {
     <p v-if="!sentExpiry" class="mt-4 text-center text-sm text-muted-foreground">
       <span>{{ t('auth.hasAccountPrompt') }}</span>
       <router-link
-        to="/auth/login"
+        :to="loginRoute"
         class="ml-1.5 font-medium text-primary hover:underline underline-offset-4"
       >
         {{ t('auth.goLogin') }}

@@ -123,7 +123,7 @@ const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)
 watch(
   [totalPages, () => packagesQuery.data.value],
   ([tp, data]) => {
-    if (data && page.value > tp) {
+    if (data && !packagesQuery.isPlaceholderData.value && page.value > tp) {
       updateFilters({ page: tp })
     }
   },
@@ -190,7 +190,7 @@ const paginationTokens = computed<(number | 'ellipsis')[]>(() => {
             <template v-if="packagesQuery.isPending.value">
               <Skeleton class="h-4 w-36 rounded-none" />
             </template>
-            <template v-else-if="packagesQuery.data.value">
+            <template v-else-if="packagesQuery.data.value && !packagesQuery.isPlaceholderData.value">
               <span v-if="total > 0">
                 {{
                   t('packages.rangeSummary', {

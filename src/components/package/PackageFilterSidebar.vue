@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RotateCcw, Search, X } from '@lucide/vue'
 import type { PlatformFilter } from '@/api/packages'
@@ -24,6 +24,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const preferences = usePreferencesStore()
+const keywordInputId = useId()
 
 const draftKeyword = ref(props.keyword)
 
@@ -70,7 +71,15 @@ watch(
   },
 )
 
-onBeforeUnmount(cancelDebounce)
+onBeforeUnmount(() => {
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer)
+    debounceTimer = null
+    if (draftKeyword.value.trim() !== props.keyword) {
+      emit('update:keyword', draftKeyword.value.trim())
+    }
+  }
+})
 
 const platformOptions = computed<
   { value: PlatformFilter; label: string; color?: string }[]
@@ -91,7 +100,7 @@ const isDirty = computed(
     <!-- 关键词检索 -->
     <section class="space-y-2">
       <label
-        for="package-keyword-input"
+        :for="keywordInputId"
         class="block text-sm font-semibold uppercase text-muted-foreground"
       >
         {{ t('packages.searchLabel') }}
@@ -101,7 +110,7 @@ const isDirty = computed(
           class="size-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
         />
         <input
-          id="package-keyword-input"
+          :id="keywordInputId"
           :value="draftKeyword"
           type="text"
           :placeholder="t('packages.searchPlaceholder')"
